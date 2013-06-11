@@ -1,0 +1,34 @@
+#!/usr/bin/env ruby
+lib_path = File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib'))
+$:.unshift(lib_path) if !$:.include?(lib_path) and File.exists?(lib_path)
+require 'json'
+require 'optparse'
+require 'mig'
+
+options = { }
+op = OptionParser.new
+op.banner = "Usage: #{File.basename(__FILE__)} [options] filepath"
+op.on('--ffmpeg-bin-path PATH', '') { |v| options[:ffmpeg_cmd_path] = v }
+op.on('--mediainfo-bin-path PATH', '') { |v| options[:mediainfo_cmd_path] = v }
+op.on('--exiftool-bin-path PATH', '') { |v| options[:exiftool_cmd_path] = v }
+op.on('--[no-]pretty-print', '') { |v| options[:pretty_print] = v }
+op.parse!
+
+logger = Logger.new(STDERR)
+logger.level = Logger::ERROR
+options[:logger] = logger
+
+file_path = ARGV.shift
+unless file_path
+  puts op
+  exit
+end
+
+mig = MediaInformationGatherer.new(options)
+output = mig.run(file_path)
+
+if options[:pretty_print]
+  puts JSON.pretty_generate(output)
+else
+  puts JSON.fast_generate(output)
+end
