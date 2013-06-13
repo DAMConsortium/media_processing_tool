@@ -80,64 +80,28 @@ class MediaInformationGatherer
         width = width.to_i
         frame_rate = frame_rate.to_f
 
-        dar = par = nil
-
+        # The following case statement is based off of - http://images.apple.com/finalcutpro/docs/Apple_ProRes_White_Paper_October_2012.pdf
         case height
-          when 480, 486
-            #480 height is the clean aperture height for a 480i video - http://lurkertech.com/lg/video-systems/#480i
-            #video_format = '480i'
-            case width
-              when 320, 640
-                dar = '4:3'
-              #par = '10:11'
-              when 427, 853
-                dar = '16:9'
-              #par = '40:33'
-            end
-            #video_system = 'NTSC' if frame_rate == 29.97 and dar
-            video_system = 'NTSC' if dar and STANDARD_VIDEO_FRAME_RATES.include? frame_rate
-          when 576
-            #video_format = '576i'
-            case width
-              when 384, 385, 768, 769
-                dar = '4:3'
-              #par = '12:11'
-              when 512, 513, 1024, 1026
-                dar = '16:9'
-              #par = '16:11'
-            end
-            #video_system = 'PAL' if frame_rate == 25 and dar
-            video_system = 'PAL' if dar and STANDARD_VIDEO_FRAME_RATES.include? frame_rate
-          when 702
-            # 720i (Clean Aperture)
-            case width
-              when 1248
-                #video_format = '720i'
-                video_system = 'HD' if STANDARD_VIDEO_FRAME_RATES.include? frame_rate
-            end
+        when 486
+          case width
           when 720
-            # 720i (Production Aperture)
-            case width
-              when 1280
-                #video_format = '720i'
-                video_system = 'HD'  if STANDARD_VIDEO_FRAME_RATES.include? frame_rate
-            end
-          when 1062
-            # 1080i (Clean Aperture)
-            case width
-              when 1888
-                #video_format = '1080i'
-                video_system = 'HD' if STANDARD_VIDEO_FRAME_RATES.include? frame_rate
-            end
-          when 1080
-            # 1080i (Production Aperture)
-            case width
-              when 1920
-                #video_format = '1080i'
-                dar = '16:9'
-              #par = '4:3'
-            end
-            video_system = 'HD' if dar and STANDARD_VIDEO_FRAME_RATES.include? frame_rate
+            video_system = 'NTSC' if STANDARD_VIDEO_FRAME_RATES.include? frame_rate
+          end
+        when 576
+          case width
+          when 720
+            video_system = 'PAL' if STANDARD_VIDEO_FRAME_RATES.include? frame_rate
+          end
+        when 720
+          case width
+          when 960, 1280
+            video_system = 'HD'  if STANDARD_VIDEO_FRAME_RATES.include? frame_rate
+          end
+        when 1080
+          case width
+          when 1280, 1440, 1920
+            video_system = 'HD' if STANDARD_VIDEO_FRAME_RATES.include? frame_rate
+          end
         end # case height
         video_system
       end # determine_video_system
