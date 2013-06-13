@@ -34,8 +34,8 @@ class MediaInformationGatherer
         cv = { }
         ffmpeg = metadata_sources[:ffmpeg] || { }
         mediainfo = metadata_sources[:mediainfo] || { 'section_type_count' => { 'audio' => 0 } }
-        mi_video = mediainfo['video'] || { }
-        mi_audio = mediainfo['audio'] || { }
+        mi_video = mediainfo['Video'] || { }
+        mi_audio = mediainfo['Audio'] || { }
 
         section_type_counts = mediainfo['section_type_counts'] || { }
         audio_track_count = section_type_counts['audio']
@@ -227,3 +227,4 @@ class MediaInformationGatherer
   end # Common
 
 end # MediaInformationGatherer
+
