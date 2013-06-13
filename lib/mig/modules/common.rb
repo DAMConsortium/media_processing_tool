@@ -42,6 +42,8 @@ class MediaInformationGatherer
         frame_rate = ffmpeg['frame_rate']
         height = ffmpeg['height']
         width = ffmpeg['width']
+
+        video_codec = determine_video_codec(metadata_sources)
         video_system = determine_video_system(height, width, frame_rate)
 
         cv[:aspect_ratio] = ffmpeg['is_widescreen'] ? '16:9' : '4:3'
@@ -49,8 +51,8 @@ class MediaInformationGatherer
         cv[:bit_depth] = mi_video['Bit depth']
         cv[:calculated_aspect_ratio] = ffmpeg['calculated_aspect_ratio']
         cv[:chroma_subsampling] = mi_video['Chroma subsampling']
-        cv[:codec_id] = mediainfo['Codec ID']
-        cv[:codec_commercial_name] = mediainfo['Commercial name']
+        cv[:codec_id] = mi_video['Codec ID']
+        cv[:codec_commercial_name] = mi_video['Commercial name']
         cv[:duration] = ffmpeg['duration']
         cv[:frames_per_second] = frame_rate # Video frames per second
         cv[:height] = height
@@ -61,10 +63,63 @@ class MediaInformationGatherer
         cv[:scan_order] = mi_video['Scan order']
         cv[:scan_type] = mi_video['Scan type']
         cv[:timecode] = ffmpeg['timecode']
+        cv[:video_codec] = video_codec ? video_codec_friendly_names.fetch(video_codec, video_codec) : 'unknown'
         cv[:video_system] = video_system
         cv[:width] = width
         cv
       end # common_video_variables
+
+      def video_codec_friendly_names
+        @video_codec_friendly_names ||= {
+          :unknown                  => 'unknown',
+          :dv                       => 'DV',
+          :imx_50                   => 'IMX 50',
+          :motion_jpeg              => 'Motion JPEG',
+          :photo_jpeg               => 'Photo JPEG',
+          :prores_high_quality      => 'Apple ProRes High Quality',
+          :prores_proxy             => 'Apple ProRes Proxy',
+          :prores_standard_quality  => 'Apple ProRes Standard quality',
+          :xdcam_hd                 => 'XDCAM HD',
+        }
+      end # video_codec_friendly_names
+
+      def determine_video_codec(params = {})
+        video_codec = :unknown
+
+        mediainfo_metadata = metadata_sources[:mediainfo] || { }
+        mi_video = mediainfo_metadata['video'] || { }
+
+        format = mi_video['Format']
+        return video_codec unless format
+        case format
+        when 'ProRes'
+          format_profile = mi_video['Format profile']
+          case format_profile
+          when nil; video_codec = :prores_standard_quality
+          when 'High'; video_codec = :prores_high_quality
+          when 'Proxy'; video_codec = :prores_proxy
+          end
+
+        when 'MPEG Video'
+          commercial_name = mi_video['Commercial name']
+          case commercial_name
+          when 'IMX 50'; video_codec = :imx_50
+          when 'XDCAM HD422'; video_codec = :xdcam_hd
+          end
+        when 'DV'
+          codec_id = mi_video['Codec ID']
+          case codec_id
+          when 'dvc'; video_codec = :dv
+          end
+        when 'JPEG'
+          codec_id = mi_video['Codec ID']
+          case codec_id
+          when 'mjpa'; video_codec = :motion_jpeg
+          when 'jpeg'; video_codec = :photo_jpeg
+          end
+        end
+        video_codec
+      end # determine_video_codec
 
       def determine_video_system(height, width, frame_rate)
         # http://en.wikipedia.org/wiki/Broadcast_television_system
