@@ -83,7 +83,7 @@ class MediaInformationGatherer
         }
       end # video_codec_friendly_names
 
-      def determine_video_codec(params = {})
+      def determine_video_codec(metadata_sources)
         video_codec = :unknown
 
         mediainfo_metadata = metadata_sources[:mediainfo] || { }
@@ -129,7 +129,7 @@ class MediaInformationGatherer
         # Programmer's Guide to Video Systems - http://lurkertech.com/lg/video-systems/#fields
 
         video_system = 'unknown'
-        return video_system unless height and width and frame_rate
+        return video_system unless height and width and frame_rate and STANDARD_VIDEO_FRAME_RATES.include?(frame_rate)
 
         height = height.to_i
         width = width.to_i
@@ -140,22 +140,22 @@ class MediaInformationGatherer
         when 486
           case width
           when 720
-            video_system = 'NTSC' if STANDARD_VIDEO_FRAME_RATES.include? frame_rate
+            video_system = 'NTSC'
           end
         when 576
           case width
           when 720
-            video_system = 'PAL' if STANDARD_VIDEO_FRAME_RATES.include? frame_rate
+            video_system = 'PAL'
           end
         when 720
           case width
           when 960, 1280
-            video_system = 'HD'  if STANDARD_VIDEO_FRAME_RATES.include? frame_rate
+            video_system = 'HD'
           end
         when 1080
           case width
           when 1280, 1440, 1920
-            video_system = 'HD' if STANDARD_VIDEO_FRAME_RATES.include? frame_rate
+            video_system = 'HD'
           end
         end # case height
         video_system
