@@ -25,6 +25,7 @@ unless file_path
 end
 
 mig = MediaInformationGatherer.new(options)
+abort("File Not Found. #{file_path}") unless File.exist?(file_path)
 output = mig.run(file_path)
 
 if options[:pretty_print]

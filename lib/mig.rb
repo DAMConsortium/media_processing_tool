@@ -3,6 +3,7 @@ require 'mig/modules/exiftool'
 require 'mig/modules/ffmpeg'
 require 'mig/modules/mediainfo'
 require 'mig/modules/media_type'
+require 'mig/modules/common'
 
 class MediaInformationGatherer
 
@@ -39,6 +40,7 @@ class MediaInformationGatherer
 
   # @param [String] file_path The path to the file to gather information about
   def run(file_path)
+    raise Errno::ENOENT, "File Not Found. File Path: '#{file_path}'" unless File.exist?(file_path)
     @metadata_sources = { }
     @media_type = { }
 
@@ -73,65 +75,8 @@ class MediaInformationGatherer
     start = Time.now and metadata_sources[:exiftool] = @exiftool.run(file_path) rescue { error: { message: $!.message, backtrace: $!.backtrace } }
     log.debug { "ExifTool took #{Time.now - start}" }
 
-    metadata_sources[:common] = common_variables(metadata_sources)
+    metadata_sources[:common] = Common.common_variables(metadata_sources)
     metadata_sources
   end # run_modules
-
-  def common_variables(metadata_sources)
-    #TODO: Need to figure out what source to use to determine the media type
-    type = :video
-
-    cv = { }
-    case type.downcase.to_sym
-      when :video
-        cv.merge!(common_video_variables(metadata_sources))
-      when :audio
-        cv.merge!(common_audio_variables(metadata_sources))
-      when :image
-        cv.merge!(common_image_variables(metadata_sources))
-      else
-        # What else is there?
-    end
-    cv
-  end # common_variables
-
-  def common_audio_variables(metadata_sources)
-
-  end # common_audio_variables
-
-  def common_image_variables(metadata_sources)
-
-  end # common_image_variables
-
-  def common_video_variables(metadata_sources)
-    #puts metadata_sources
-    cv = { }
-    ffmpeg = metadata_sources[:ffmpeg] || { }
-    mediainfo = metadata_sources[:mediainfo] || { 'section_type_count' => { 'audio' => 0 } }
-    mi_video = mediainfo['video'] || { }
-
-    section_type_counts = mediainfo['section_type_counts'] || { }
-    audio_track_count = section_type_counts['audio']
-
-    cv[:aspect_ratio] = ffmpeg['is_widescreen'] ? '16:9' : '4:3'
-    cv[:audio_sample_rate] = ffmpeg['audio_sample_rate']
-    cv[:bit_depth] = mi_video['Bit depth']
-    cv[:calculated_aspect_ratio] = ffmpeg['calculated_aspect_ratio']
-    cv[:chroma_subsampling] = mi_video['Chroma subsampling']
-    cv[:codec_id] = mediainfo['Codec ID']
-    cv[:codec_commercial_name] = mediainfo['Commercial name']
-    cv[:duration] = ffmpeg['duration']
-    cv[:frames_per_second] = ffmpeg['frame_rate'] # Video frames per second
-    cv[:height] = ffmpeg['height']
-    cv[:is_high_definition] = ffmpeg['is_high_definition'] # Determine if video is Standard Def or High Definition
-    cv[:number_of_audio_tracks] = audio_track_count # Determine the number of audio channels
-    cv[:number_of_audio_channels] = ffmpeg['audio_channel_count']
-    cv[:resolution] = ffmpeg['resolution']
-    cv[:scan_order] = mi_video['Scan order']
-    cv[:scan_type] = mi_video['Scan type']
-    cv[:timecode] = ffmpeg['timecode']
-    cv[:width] = ffmpeg['width']
-    cv
-  end # common_video_variables
 
 end # MediaInformationGatherer
