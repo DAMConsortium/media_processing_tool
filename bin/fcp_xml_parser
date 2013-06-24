@@ -1,0 +1,38 @@
+#!/usr/bin/env ruby
+$:.unshift(File.expand_path(File.join(File.dirname(__FILE__), '../lib')))
+require 'json'
+require 'optparse'
+require 'final_cut_pro/xml_parser'
+
+options = { }
+
+op = OptionParser.new
+op.banner = "Usage: #{File.basename(__FILE__)} [options] filepath"
+options[:pretty_print] = true
+op.on('--[no-]pretty-print', '') { |v| options[:pretty_print] = v }
+options[:output_files] = true
+op.on('--[no-]files', '') { |v| options[:output_files] = v }
+options[:output_sequences] = true
+op.on('--[no-]sequences', '') { |v| options[:output_sequences] = v }
+op.parse!
+
+file_path = ARGV.shift
+unless file_path
+  puts op
+  exit
+end
+
+# { files: { }, sequences: { } }
+doc = FinalCutPro::XMLParser.parse(file_path)#.to_hash
+
+output = { }
+output[:files] = doc.files if options[:output_files]
+output[:sequences] = doc.sequences if options[:output_sequences]
+
+json_generate_options = { :max_nesting => 250 }
+if options[:pretty_print]
+  puts JSON.pretty_generate(output, json_generate_options)
+else
+  puts JSON.fast_generate(output, json_generate_options)
+end
+
