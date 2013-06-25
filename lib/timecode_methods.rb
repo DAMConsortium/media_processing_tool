@@ -13,12 +13,10 @@ module TimecodeMethods
       fps
     end # convert_time_base
 
-    def convert_frames_time_base(frames, time_base_from, time_base_to, ntsc_from = false, ntsc_to = false)
-      fps_from = convert_time_base(time_base_from, ntsc_from)
-      fps_to = convert_time_base(time_base_to, ntsc_to)
-      return 0 unless fps_from and fps_from > 0 and fps_to and fps_to > 0
-      frames *= (fps_to / fps_from)
-    end
+    def convert_frames_time_base(frames, frame_rate_from, frame_rate_to)
+      return 0 unless frame_rate_from and frame_rate_from > 0 and frame_rate_to and frame_rate_to > 0
+      frames * (frame_rate_to / frame_rate_from)
+    end # convert_frames_time_base
 
     def timecode_to_frames(timecode, fps = 25.0, drop_frame = false)
       return 0 unless timecode and fps and fps > 0
@@ -29,13 +27,13 @@ module TimecodeMethods
       frames += (hours.to_i * 3600) * fps
 
       frames
-    end
+    end # timecode_to_frames
 
-    def frames_to_timecode(frames, frame_rate = 25.0, ntsc = false, drop_code_separator = ';')
+    def frames_to_timecode(frames, frame_rate = 25.0, drop_frame = false, drop_code_separator = ';')
       return '00:00:00:00' unless frames and frames > 0 and frame_rate and frame_rate > 0
-      fps = convert_time_base(frame_rate, ntsc)
-      return frames_to_drop_frame_timecode(frames, fps, drop_code_separator) if ntsc
-      seconds = frames.to_f / fps.to_f
+      return frames_to_drop_frame_timecode(frames, frame_rate, drop_code_separator) if drop_frame
+      fps = frame_rate.to_f
+      seconds = frames.to_f / fps
       remaining_frames = frames % fps
 
       hours = seconds / 3600
@@ -47,19 +45,42 @@ module TimecodeMethods
       sprintf('%02d:%02d:%02d:%02d', hours, minutes, seconds, remaining_frames)
     end # frames_to_timecode
 
-    def frames_to_drop_frame_timecode(frames, time_base, frame_separator = ';')
-      time_base = time_base.round(0)
+    def frames_to_drop_frame_timecode(frames, frame_rate, frame_separator = ';')
+      # FIXME FAILS TESTS
+
+      #?> frames_to_drop_frame_timecode(5395, 29.97)
+      #=> "00:02:59;29"
+      #frames_to_drop_frame_timecode(5396, 29.97)
+      #=> "00:03:00;00"
+      #?> frames_to_drop_frame_timecode(5397, 29.97)
+      #=> "00:03:00;01"
+
+
+      #?> frames_to_drop_frame_timecode(1800, 29.97)
+      #=> "00:01:00;02"
+
+      #?> frames_to_drop_frame_timecode(3600, 29.97)
+      #=> "00:02:00;04"
+
+      #?> frames_to_drop_frame_timecode(5400, 29.97)
+      #=> "00:03:00;06"
+
+      # when frames equals 1800 then timecode should be '00:01:00:00'
+      # when frames equals 3600 then timecode should be '00:02:02:00'
+      # when frames equals 5400 then timecode should be '00:03:02:00'
+      # when frames equals 18000 then timecode should be 00:10:00:00'
+      frame_rate = frame_rate.round(0)
       frames = frames.to_i
 
-      skipped_frames = frames / (time_base * 60)
+      skipped_frames = frames / (frame_rate * 60)
       skipped_frames *= 2
-      added_frames = frames / (time_base * 600) #60 * 10
+      added_frames = frames / (frame_rate * 600) #60 * 10
       added_frames *= 2
 
       frames += skipped_frames
       frames -= added_frames
 
-      sec_frames = time_base
+      sec_frames = frame_rate
       min_frames = 60 * sec_frames
       hour_frames = 60 * min_frames
 
