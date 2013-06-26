@@ -39,7 +39,7 @@ class MediaInformationGatherer
         mi_video = mediainfo['Video'] || { }
         mi_audio = mediainfo['Audio'] || { }
 
-        creation_date_time = Time.parse(ffmpeg['creation_time']).strftime('%B %d, %Y %r')
+        creation_date_time = Time.parse(ffmpeg['creation_time']).strftime('%B %d, %Y %r') rescue ffmpeg['creation_time']
 
         duration = ffmpeg['duration']
         dl = duration
@@ -201,6 +201,8 @@ class MediaInformationGatherer
         # http://www.bambooav.com/ntsc-and-pal-video-standards.html
         # Programmer's Guide to Video Systems - http://lurkertech.com/lg/video-systems/#fields
 
+        # PAL = 25fps Standard: 768x576  Widescreen: 1024x576
+        # NTSC = 29.97fps Standard: 720x540  Widescreen: 854x480
         video_system = 'unknown'
 
         return video_system unless height and width and frame_rate
