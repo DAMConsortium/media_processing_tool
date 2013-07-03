@@ -63,7 +63,7 @@ class Mediainfo
   # @param [Hash] section_data
   def append_section(mediainfo_hash, section_name, section_data)
     if mediainfo_hash.has_key? section_name
-      mediainfo_hash[section_name] = [ mediainfo[section_name] ] unless mediainfo_hash[section_name].is_a? Array
+      mediainfo_hash[section_name] = [ mediainfo_hash[section_name] ] unless mediainfo_hash[section_name].is_a? Array
       mediainfo_hash[section_name] << section_data
     else
       mediainfo_hash[section_name] = section_data
