@@ -567,10 +567,10 @@ module UDAMUtils
 
 
     # @param [Array<Hash>] objects
-    def process_objects(objects)
+    def process_objects(objects, params)
       results = [ ]
       @object = nil
-      objects.each do |object|
+      [*objects].each do |object|
         @object = object
         begin
           results << process_object
