@@ -59,19 +59,19 @@ class MediaInformationGatherer
   def run_modules(file_path)
     metadata_sources = Hash.new
 
-    log.debug { "Running Filemagic." }
+    log.debug { 'Running Filemagic.' }
     start = Time.now and metadata_sources[:filemagic] = @media_typer.run(file_path, @options) rescue { error: { message: $!.message, backtrace: $!.backtrace } }
     log.debug { "Filemagic took #{Time.now - start}" }
 
-    log.debug { "Running MediaInfo." }
+    log.debug { 'Running MediaInfo.' }
     start = Time.now and metadata_sources[:mediainfo] = @mediainfo.run(file_path, @options) rescue { error: { message: $!.message, backtrace: $!.backtrace } }
     log.debug { "MediaInfo took #{Time.now - start}" }
 
-    log.debug { "Running FFMPEG." }
+    log.debug { 'Running FFMPEG.' }
     start = Time.now and metadata_sources[:ffmpeg] = @ffmpeg.run(file_path, @options) rescue { error: { message: $!.message, backtrace: $!.backtrace } }
     log.debug { "FFMpeg took #{Time.now - start}" }
 
-    log.debug { "Running ExifTool." }
+    log.debug { 'Running ExifTool.' }
     start = Time.now and metadata_sources[:exiftool] = @exiftool.run(file_path) rescue { error: { message: $!.message, backtrace: $!.backtrace } }
     log.debug { "ExifTool took #{Time.now - start}" }
 
