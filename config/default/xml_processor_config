@@ -1,0 +1,49 @@
+# The Following Instance Variables are Available During Evaluation
+#
+# @object The Hash that is being Processed
+# @full_file_path_field_name defaults to :path_on_file_system
+# @full_file_path = object[@full_file_path_field_name]
+#
+# @metadata_sources = object.fetch(:metadata_sources, { })
+# @exiftool = @metadata_sources[:exiftool] ||= { }
+# @mediainfo = @metadata_sources[:mediainfo] ||= { }
+# @ffmpeg = @metadata_sources[:ffmpeg] ||= { }
+# @filemagic = @metadata_sources[:filemagic] ||= { }
+# @media = @metadata_sources[:filemagic] ||= { }
+# @common_media_info = @metadata_sources[:common] ||= { }
+#
+# @media = entity.fetch('media', { })
+# @media_type = @media[:type] || @media['type']
+# @media_subtype = @media[:subtype] || @media['subtype']
+@publish_maps = [
+  {
+    type: :glob,
+    map: {
+      '*.*' => {
+        publish_executable: 'echo',
+        eval_publish_executable: false,
+        publish_arguments: %q("#{@full_file_path} #{@media_type}/#{@media_subtype} >> /tmp/mpt_xml_processor_test"),
+        eval_publish_arguments: true,
+        #workflow: {
+        #  name: 'WORKFLOW_ONLY',
+        #  parameters: {
+        #
+        #  } # parameters
+        #} # workflow
+      }
+    } # map
+  },
+  {
+    type: :eval,
+    map: {
+      'true' => {
+        workflow: {
+          name: 'WORKFLOW_ONLY',
+          parameters: {
+
+          } # parameters
+        } # workflow
+      }
+    } # map
+  },
+] # @publish_maps

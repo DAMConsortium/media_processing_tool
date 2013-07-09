@@ -1,0 +1,50 @@
+#!/usr/bin/env ruby
+$:.unshift(File.expand_path('../lib'))
+require 'optparse'
+require 'pp'
+
+require 'media_processing_tool/xml_processor'
+
+options_file_path = nil
+config_file_path = File.expand_path(File.join(File.dirname(__FILE__), '..', 'config', 'default', "#{File.basename(__FILE__, '.*')}_config"))
+options = { }
+ARGV << '--help' if ARGV.empty?
+op = OptionParser.new
+op.banner = "#{File.basename(__FILE__)} [options] file"
+options[:config_file_path] = config_file_path
+op.on('--config-file-path PATH', 'The path to the configuration file containing the @publish_map variable definition.', "default: #{config_file_path}") { |v| options[:config_file_path] = v }
+op.on('--[no-]output-results', 'Outputs the Result as a JSON object.') { |v| options[:output_results] = v }
+op.on('--[no-]pretty-print', 'Pretty Prints the Results.') { |v| options[:pretty_print] = v }
+#op.on('--path-to-mig PATH', '') { |v| options[:path_to_mig] = v }
+options[:log_level] = Logger::WARN
+op.on('--log-level LEVEL', [:debug, :DEBUG, :info, :INFO, :warn, :WARN, :error, :ERROR, :fatal, :FATAL], '') do |v|
+  v = v.upcase # Symbol doesn't support upcase!
+  options[:log_level] = Logger.const_defined?(v) ? Logger.const_get(v) : Logger::WARN
+end
+options[:log_to] = STDERR
+op.on('--log-to PATH', '') do |v|
+  options[:log_to] = case v.downcase
+                     when 'stderr'; STDERR
+                     when 'stdout'; STDOUT
+                     else; v
+                     end
+end
+op.on('--help', 'Display this menu.') { puts op; exit }
+op.load(options_file_path)
+op.parse!
+
+xp = MediaProcessingTool::XMLProcessor.new(options)
+
+files = ARGV
+results = []
+files.each do |file|
+  results << { file: file, results: xp.process(file) }
+end
+results = results.pop[:results] unless files.length > 1
+if options[:output_results]
+  if options[:pretty_print]
+    puts JSON.pretty_generate(results)
+  else
+    puts JSON.fast_generate(results)
+  end
+end
