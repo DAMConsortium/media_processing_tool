@@ -117,7 +117,7 @@ module UDAMUtils
       logger.debug { "Initializing Workflow Publish Map Processor. #{params}" }
 
       options = params
-      @uu_bin_dir = '/usr/local/bin' #|| UDAMUtils.get_bin_dir
+      @uu_bin_dir = '/usr/bin' #|| UDAMUtils.get_bin_dir
 
       @udam_utils_exec = options[:uu_executable] ||= File.join(@uu_bin_dir, 'uu')
       raise "UDAM Utils Executable Not Found. File Not Found: '#{@udam_utils_exec}'" unless File.exist?(@udam_utils_exec)
