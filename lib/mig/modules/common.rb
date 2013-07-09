@@ -12,7 +12,8 @@ class MediaInformationGatherer
         cv = { }
         case type.downcase.to_sym
           when :video
-            cv.merge!(common_video_variables(metadata_sources))
+            _cv = common_video_variables(metadata_sources) rescue { }
+            cv.merge!(_cv)
           when :audio
             cv.merge!(common_audio_variables(metadata_sources))
           when :image
@@ -41,14 +42,17 @@ class MediaInformationGatherer
 
         creation_date_time = Time.parse(ffmpeg['creation_time']).strftime('%B %d, %Y %r') rescue ffmpeg['creation_time']
 
-        duration = ffmpeg['duration']
-        dl = duration
-        dlh = dl / 3600
-        dl %= 3600
-        dlm = dl / 60
-        dl %= 60
-        duration_long = sprintf('%02d:%02d:%02d', dlh, dlm, dl)
-
+        if duration
+          duration = ffmpeg['duration']
+          dl = duration
+          dlh = dl / 3600
+          dl %= 3600
+          dlm = dl / 60
+          dl %= 60
+          duration_long = sprintf('%02d:%02d:%02d', dlh, dlm, dl)
+        else
+          duration_long = '00:00:00'
+        end
         section_type_counts = mediainfo['section_type_counts'] || { }
         audio_track_count = section_type_counts['audio']
 
