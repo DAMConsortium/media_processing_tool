@@ -42,8 +42,8 @@ class MediaInformationGatherer
 
         creation_date_time = Time.parse(ffmpeg['creation_time']).strftime('%B %d, %Y %r') rescue ffmpeg['creation_time']
 
+        duration = ffmpeg['duration']
         if duration
-          duration = ffmpeg['duration']
           dl = duration
           dlh = dl / 3600
           dl %= 3600
