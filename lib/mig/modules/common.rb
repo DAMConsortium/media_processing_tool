@@ -65,6 +65,11 @@ class MediaInformationGatherer
 
         video_system = determine_video_system(height, width, frame_rate)
 
+        file_path = ffmpeg['path']
+        source_directory = File.dirname(file_path)
+
+        cv[:file_path] = file_path
+        cv[:source_directory] = source_directory
         cv[:aspect_ratio] = ffmpeg['is_widescreen'] ? '16:9' : '4:3'
         cv[:audio_codec_id] = mi_audio['Codec ID']
         cv[:audio_sample_rate] = ffmpeg['audio_sample_rate']
