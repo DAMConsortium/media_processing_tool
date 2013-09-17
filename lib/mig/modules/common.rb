@@ -66,10 +66,11 @@ class MediaInformationGatherer
         video_system = determine_video_system(height, width, frame_rate)
 
         file_path = ffmpeg['path']
-        source_directory = File.dirname(file_path)
+        source_directory = File.dirname(File.expand_path(file_path))
 
         cv[:file_path] = file_path
         cv[:source_directory] = source_directory
+
         cv[:aspect_ratio] = ffmpeg['is_widescreen'] ? '16:9' : '4:3'
         cv[:audio_codec_id] = mi_audio['Codec ID']
         cv[:audio_sample_rate] = ffmpeg['audio_sample_rate']
@@ -77,6 +78,7 @@ class MediaInformationGatherer
         cv[:calculated_aspect_ratio] = ffmpeg['calculated_aspect_ratio']
         cv[:chroma_subsampling] = mi_video['Chroma subsampling']
         cv[:creation_date_time] = creation_date_time
+        cv[:display_aspect_ratio] = ffmpeg['display_aspect_ratio']
         cv[:duration] = duration
         cv[:duration_long] = duration_long
         cv[:frames_per_second] = frame_rate # Video frames per second
@@ -85,9 +87,11 @@ class MediaInformationGatherer
         cv[:is_widescreen] = ffmpeg['is_widescreen']
         cv[:number_of_audio_tracks] = audio_track_count # Determine the number of audio channels
         cv[:number_of_audio_channels] = ffmpeg['audio_channel_count']
+        cv[:pixel_aspect_ratio] = ffmpeg['pixel_aspect_ratio']
         cv[:resolution] = ffmpeg['resolution']
         cv[:scan_order] = mi_video['Scan order']
         cv[:scan_type] = mi_video['Scan type']
+        cv[:storage_aspect_ratio] = ffmpeg['storage_aspect_ratio']
         cv[:timecode] = ffmpeg['timecode']
         cv[:video_codec_id] = video_codec_id
         cv[:video_codec_commercial_name] = mi_video['Commercial name']
