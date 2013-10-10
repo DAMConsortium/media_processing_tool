@@ -2,7 +2,7 @@ module TimecodeMethods
 
     # @param [Integer] time_base
     # @param [Boolean] ntsc
-    def convert_time_base(time_base, ntsc)
+    def self.convert_time_base(time_base, ntsc)
       fps = case time_base.to_f
               when 24; ntsc ? 23.976 : 24.0
               when 30; ntsc ? 29.97 : 30.0
@@ -12,13 +12,15 @@ module TimecodeMethods
       #puts "Time Base: #{time_base} NTSC: #{ntsc} FPS: #{fps}"
       fps
     end # convert_time_base
+    def convert_time_base(*args); self.convert_time_base(*args) end
 
-    def convert_frames_time_base(frames, frame_rate_from, frame_rate_to)
+    def self.convert_frames_time_base(frames, frame_rate_from, frame_rate_to)
       return 0 unless frame_rate_from and frame_rate_from > 0 and frame_rate_to and frame_rate_to > 0
       frames * (frame_rate_to / frame_rate_from)
     end # convert_frames_time_base
+    def convert_frames_time_base(*args); self.convert_frames_time_base(*args) end
 
-    def timecode_to_frames(timecode, fps = 25.0, drop_frame = false)
+    def self.timecode_to_frames(timecode, fps = 25.0, drop_frame = false)
       return 0 unless timecode and fps and fps > 0
       hours, minutes, seconds, frames = timecode.split(':')
       frames = frames.to_i
@@ -28,8 +30,9 @@ module TimecodeMethods
 
       frames
     end # timecode_to_frames
+    def timecode_to_frames(*args); self.timecode_to_frames(*args) end
 
-    def frames_to_timecode(frames, frame_rate = 25.0, drop_frame = false, drop_code_separator = ';')
+    def self.frames_to_timecode(frames, frame_rate = 25.0, drop_frame = false, drop_code_separator = ';')
       return '00:00:00:00' unless frames and frames > 0 and frame_rate and frame_rate > 0
       return frames_to_drop_frame_timecode(frames, frame_rate, drop_code_separator) if drop_frame
       fps = frame_rate.to_f
@@ -44,8 +47,9 @@ module TimecodeMethods
 
       sprintf('%02d:%02d:%02d:%02d', hours, minutes, seconds, remaining_frames)
     end # frames_to_timecode
+    def frames_to_timecode(*args); self.frames_to_timecode(*args) end
 
-    def frames_to_drop_frame_timecode(frames, frame_rate, frame_separator = ';')
+    def self.frames_to_drop_frame_timecode(frames, frame_rate, frame_separator = ';')
       # FIXME FAILS TESTS
 
       #?> frames_to_drop_frame_timecode(5395, 29.97)
@@ -99,5 +103,6 @@ module TimecodeMethods
       drop = frames
       return sprintf('%02d:%02d:%02d%s%02d', hour, min, sec, frame_separator, drop)
     end # frames_to_drop_frame_timecode
+    def frames_to_drop_frame_timecode(*args); self.frames_to_drop_frame_timecode(*args) end
 
 end # Timecode
