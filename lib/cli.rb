@@ -85,3 +85,4 @@ end
 
 default_options_file_path = File.join(File.expand_path('.'), "#{File.basename($0, '.rb')}_options")
 options[:options_file_path] = default_options_file_path if File.exists?(default_options_file_path)
+options[:options_file_path] ||= File.expand_path(File.basename($0, '.*'), '~/.options')
