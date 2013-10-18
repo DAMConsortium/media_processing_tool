@@ -45,6 +45,7 @@ class MediaInformationGatherer
           response[file_path] = {:exception => {:message => e.message, :backtrace => e.backtrace}}
         end
       end
+      content_type :json
       JSON.generate(response)
     end # post '/'
 
