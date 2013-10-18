@@ -3,7 +3,9 @@ require 'shellwords'
 require 'time' # unless defined? Time
 
 class FFMPEG
-  
+
+  DEFAULT_EXECUTABLE_PATH = 'ffmpeg'
+
   class Movie
     attr_reader :command, :output,
                 :path, :duration, :time, :bitrate, :rotation, :creation_time,
@@ -19,7 +21,7 @@ class FFMPEG
       @path = path
       
       #@logger = options.fetch(:logger, Logger.new(STDOUT)) 
-      @ffmpeg_cmd_path = options.fetch(:ffmpeg_cmd_path, 'ffmpeg')
+      @ffmpeg_cmd_path = options.fetch(:ffmpeg_cmd_path, FFMPEG::DEFAULT_EXECUTABLE_PATH)
       
 
       # ffmpeg will output to stderr
@@ -56,21 +58,22 @@ class FFMPEG
       
       if video_stream
         # Example Strings
+        #  "mpeg2video (4:2:2) (mx5n / 0x6E35786D), yuv422p, 720x512 [SAR 512:405 DAR 16:9], 50084 kb/s, SAR 40:33 DAR 75:44, 29.97 fps, 29.97 tbr, 2997 tbn, 59.94 tbc"
         #  "h264 (Main) (avc1 / 0x31637661), yuv420p, 854x480 [SAR 1:1 DAR 427:240], 2196 kb/s, 29.97 fps, 29.97 tbr, 2997 tbn, 59.94 tbc"
         #  "prores (apcn / 0x6E637061), yuv422p10le, 720x486, 23587 kb/s, SAR 10:11 DAR 400:297, 29.97 fps, 29.97 tbr, 2997 tbn, 2997 tbc"
 
         @video_codec, @colorspace, @resolution, video_bitrate, aspect_ratios = video_stream.split(/\s?,\s?/)
         @video_bitrate = video_bitrate =~ %r(\A(\d+) kb/s\Z) ? $1.to_i : nil
-        unless aspect_ratios.include?(':')
-          @resolution, aspect_ratios = @resolution.strip.split(' ', 2) rescue @resolution = aspect_ratios = nil
-        end
+
+
+        process_aspect_ratios(aspect_ratios) if aspect_ratios and aspect_ratios.include?(':')
+
+        @resolution, aspect_ratios = @resolution.strip.split(' ', 2) rescue @resolution = aspect_ratios = nil
+
+        process_aspect_ratios(aspect_ratios) if aspect_ratios and aspect_ratios.include?(':')
+
         @width, @height = @resolution.split('x') rescue @width = @height = nil
         @frame_rate = $1 if video_stream[/(\d*\.?\d*)\s?fps/]
-        if aspect_ratios
-          @dar = @display_aspect_ratio = $1 if aspect_ratios[/DAR (\d+:\d+)/] rescue nil # Display Aspect Ratio = SAR * PAR
-          @sar = @storage_aspect_ratio = $1 if aspect_ratios[/SAR (\d+:\d+)/] rescue nil # Storage Aspect Ratio = DAR/PAR
-          @par = @pixel_aspect_ratio   = $1 if aspect_ratios[/PAR (\d+:\d+)/] rescue nil # Pixel aspect ratio = DAR/SAR
-        end
 
         is_widescreen?
         
@@ -87,12 +90,21 @@ class FFMPEG
       @invalid = true if @output.include?('is not supported')
       @invalid = true if @output.include?('could not find codec parameters')
     end # initialize
-    
+
+    def process_aspect_ratios(aspect_ratios)
+      @dar = @display_aspect_ratio = $1 if aspect_ratios[/DAR (\d+:\d+)/] rescue nil # Display Aspect Ratio = SAR * PAR
+      @sar = @storage_aspect_ratio = $1 if aspect_ratios[/SAR (\d+:\d+)/] rescue nil # Storage Aspect Ratio = DAR/PAR
+      @par = @pixel_aspect_ratio   = $1 if aspect_ratios[/PAR (\d+:\d+)/] rescue nil # Pixel aspect ratio = DAR/SAR
+    end # process_aspect_ratios
+
     # @return [Boolean]
     def valid?
       not @invalid
     end
     
+    # Determines if the aspect from dimensions is widescreen (> 1.4)
+    # 1.4 is derived from the following table {http://en.wikipedia.org/wiki/Storage_Aspect_Ratio#Previous_and_currently_used_aspect_ratios Aspect Ratios}
+    #
     # @return [Boolean]
     def is_widescreen?
       @is_widescreen ||= aspect_from_dimensions > 1.4

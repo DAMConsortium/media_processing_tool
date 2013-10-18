@@ -1,9 +1,11 @@
 class Mediainfo
-  
+
+  DEFAULT_EXECUTABLE_PATH = '/usr/local/bin/mediainfo'
+
   # @params [Hash] options
   # @options options [String] :mediainfo_cmd_path
   def initialize(options = { })
-    @mediainfo_cmd_path = options.fetch(:mediainfo_cmd_path, '/usr/local/bin/mediainfo')
+    @mediainfo_cmd_path = options.fetch(:mediainfo_cmd_path, DEFAULT_EXECUTABLE_PATH)
   end # initialize
   
   # @params [String] file_path
