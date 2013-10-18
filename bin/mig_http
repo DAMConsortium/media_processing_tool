@@ -1,0 +1,49 @@
+#!/usr/bin/env ruby
+if %w(start stop restart reload run zap status).include?((command = ARGV.first) ? command.downcase : command)
+  require 'daemons'
+  Daemons.run($0)
+  exit
+end
+
+lib_path = File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib'))
+$:.unshift(lib_path) if !$:.include?(lib_path) and File.exists?(lib_path)
+require 'json'
+
+require 'cli'
+require 'mig'
+require 'mig/http'
+
+options[:binding] = '0.0.0.0'
+options[:local_port] = 4567
+
+op = common_option_parser
+op.banner = "Usage: #{File.basename(__FILE__)} [options] filepath"
+op.on('--ffmpeg-bin-path PATH', 'The path to the FFMPEG executable.') { |v| options[:ffmpeg_cmd_path] = v }
+op.on('--mediainfo-bin-path PATH', 'The path to the MediaInfo executable.') { |v| options[:mediainfo_cmd_path] = v }
+op.on('--exiftool-bin-path PATH', 'The path to the exiftool executable.') { |v| options[:exiftool_cmd_path] = v }
+op.on('--binding BINDING', 'The address to bind the callback server to.',
+      "\tdefault: #{options[:binding]}") do |v|
+  options[:binding] = v
+end
+op.on('--port PORT', 'The port that the callback server should listen on.',
+      "\tdefault: #{options[:local_port]}") do |v|
+  options[:local_port] = v
+end
+op.on('--[no-]options-file [FILENAME]', "\tdefault: #{options[:options_file_path]}" ) { |v| options[:options_file_path] = v }
+add_common_options
+op.parse_common
+
+logger = Logger.new(STDERR)
+logger.level = Logger::DEBUG
+options[:logger] = logger
+
+mig = MediaInformationGatherer.new(options)
+
+app = MediaInformationGatherer::HTTP
+app.set(:logger, logger)
+app.set(:bind, options.delete(:binding))
+app.set(:port, options.delete(:local_port))
+app.set(:mig, mig)
+app.set(:initial_options, options)
+app.run!
+
