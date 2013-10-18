@@ -1,5 +1,5 @@
 require 'json'
-require 'sinatra'
+require 'sinatra/base'
 
 class MediaInformationGatherer
 
@@ -38,13 +38,13 @@ class MediaInformationGatherer
 
       response = { }
       file_paths = _params['file_paths']
-      [*file_paths].each { |file_path|
+      [*file_paths].each do |file_path|
         begin
           response[file_path] = settings.mig.run(file_path)
         rescue => e
-          response[file_path] = { :exception => { :message => e.message, :backtrace => e.backtrace } }
+          response[file_path] = {:exception => {:message => e.message, :backtrace => e.backtrace}}
         end
-      }
+      end
       JSON.generate(response)
     end # post '/'
 
