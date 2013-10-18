@@ -15,17 +15,19 @@ require 'mig/http'
 
 options[:binding] = '0.0.0.0'
 options[:local_port] = 4567
-
+options[:ffmpeg_cmd_path] = FFMPEG::DEFAULT_EXECUTABLE_PATH
+options[:mediainfo_cmd_path] = Mediainfo::DEFAULT_EXECUTABLE_PATH
+options[:exiftool_cmd_path] = ExifTool::DEFAULT_EXECUTABLE_PATH
 op = common_option_parser
-op.banner = "Usage: #{File.basename(__FILE__)} [options] filepath"
-op.on('--ffmpeg-bin-path PATH', 'The path to the FFMPEG executable.') { |v| options[:ffmpeg_cmd_path] = v }
-op.on('--mediainfo-bin-path PATH', 'The path to the MediaInfo executable.') { |v| options[:mediainfo_cmd_path] = v }
-op.on('--exiftool-bin-path PATH', 'The path to the exiftool executable.') { |v| options[:exiftool_cmd_path] = v }
-op.on('--binding BINDING', 'The address to bind the callback server to.',
+op.banner = "Usage:  #{File.basename(__FILE__)} [options] \n\t#{File.basename(__FILE__)} [start|stop|status] [daemon options] -- [application options]"
+op.on('--ffmpeg-bin-path PATH', 'The path to the FFMPEG executable.', "\tdefault:#{options[:ffmpeg_cmd_path]}") { |v| options[:ffmpeg_cmd_path] = v }
+op.on('--mediainfo-bin-path PATH', 'The path to the MediaInfo executable.', "\tdefault:#{options[:mediainfo_cmd_path]}") { |v| options[:mediainfo_cmd_path] = v }
+op.on('--exiftool-bin-path PATH', 'The path to the exiftool executable.', "\tdefault:#{options[:exiftool_cmd_path]}") { |v| options[:exiftool_cmd_path] = v }
+op.on('--binding BINDING', 'The address to bind the server to.',
       "\tdefault: #{options[:binding]}") do |v|
   options[:binding] = v
 end
-op.on('--port PORT', 'The port that the callback server should listen on.',
+op.on('--port PORT', 'The port that the server should listen on.',
       "\tdefault: #{options[:local_port]}") do |v|
   options[:local_port] = v
 end
