@@ -6,13 +6,16 @@ require 'optparse'
 require 'mig'
 
 options = { }
+
 op = OptionParser.new
-op.banner = "Usage: #{File.basename(__FILE__)} [options] filepath"
+#op.banner = "Usage: #{File.basename(__FILE__)} [options] filepath"
 op.on('--ffmpeg-bin-path PATH', '') { |v| options[:ffmpeg_cmd_path] = v }
 op.on('--mediainfo-bin-path PATH', '') { |v| options[:mediainfo_cmd_path] = v }
 op.on('--exiftool-bin-path PATH', '') { |v| options[:exiftool_cmd_path] = v }
 op.on('--[no-]pretty-print', '') { |v| options[:pretty_print] = v }
-op.parse!
+op.on('--help', 'Displays this message.') { puts op; exit }
+op.parse!(ARGV.dup)
+op.parse! if op.load
 
 logger = Logger.new(STDERR)
 logger.level = Logger::ERROR
