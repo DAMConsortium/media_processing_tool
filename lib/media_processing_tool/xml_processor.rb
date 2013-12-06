@@ -2,6 +2,7 @@ require 'media_processing_tool/xml_parser'
 require 'media_processing_tool/publisher'
 require 'mig'
 module MediaProcessingTool
+
   class XMLProcessor
 
     def self.process(xml, params = { })
@@ -11,14 +12,25 @@ module MediaProcessingTool
     DEFAULT_FILE_PATH_FIELD_NAME = :path_on_file_system
 
     attr_accessor :logger
+
+    # @return [Boolean] determines if the files parsed from the XML should be sent to a publisher
+    attr_accessor :publish
+
     def initialize(params = { })
-      @logger = params[:logger] ||= Logger.new(params[:log_to] || STDOUT)
-      logger.level = params[:log_level] if params[:log_level]
-      params[:logger] = logger unless params[:logger]
+      initialize_logger(params)
+
+      @publish = params.fetch(:publish, true)
+      @default_file_path_field_name = params[:@default_file_path_field_name] || DEFAULT_FILE_PATH_FIELD_NAME
 
       initialize_mig(params.dup)
       initialize_default_publisher(params.dup)
     end # initialize
+
+    def initialize_logger(params = { })
+      @logger = params[:logger] ||= Logger.new(params[:log_to] || STDOUT)
+      logger.level = params[:log_level] if params[:log_level]
+      params[:logger] = logger unless params[:logger]
+    end # initialize_logger
 
     def initialize_mig(params = {})
       logger.debug { "Initializing Media Processing Tool. #{params}" }
@@ -27,7 +39,7 @@ module MediaProcessingTool
 
     def initialize_default_publisher(params = {})
       logger.debug { "Initializing Default Publisher. #{params}" }
-      params[:file_path_field_name] = DEFAULT_FILE_PATH_FIELD_NAME
+      params[:file_path_field_name] = @default_file_path_field_name
       @default_publisher = MediaProcessingTool::Publisher.new(params)
     end # initialize_publisher
 
@@ -57,8 +69,9 @@ module MediaProcessingTool
 
       if force_default_publisher
         @publisher = @default_publisher.dup
-        process_document_files
+        @results[:files] = process_document_files(@files, :publisher => @publisher) if @files
       else
+        # TODO PUT IN DYNAMIC PUBLISHER HANDLING
         doc_type = document_type
       end
 
@@ -67,13 +80,14 @@ module MediaProcessingTool
       @results
     end # process
 
-    def process_document_files(params = {})
-      _files = @files.dup
+    def process_document_files(_files, params = {})
+      publisher = params[:publisher]
 
       run_mig = params.fetch(:run_mig, true)
 
-      _files.map do |file|
-        full_file_path = file[DEFAULT_FILE_PATH_FIELD_NAME]
+      _results = [ ]
+      _files.each do |file|
+        full_file_path = file[@default_file_path_field_name]
 
         if run_mig
           _mig = run_mig_on_file(full_file_path)
@@ -81,15 +95,12 @@ module MediaProcessingTool
         else
           logger.debug { 'Media Information Gathering SKIPPED. run_mig set to false.' }
         end
-        file
-      end
+        file_result = { file: file }
+        file_result[:publish_result] = publisher.process(file) if publish and publisher
 
-      publisher_results = @publisher.publisher.process_objects(_files)
-      _results = [ ]
-      _files.each do |file|
-        _results << { file_path: file, results: publisher_results.shift }
+        _results << file_result
       end
-      @results[:files] = _results
+      _results
     end # process_files
 
     def process_document_sequences(params = {})

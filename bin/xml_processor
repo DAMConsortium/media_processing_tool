@@ -17,7 +17,7 @@ op.on('--[no-]output-results', 'Outputs the Result as a JSON object.') { |v| opt
 op.on('--[no-]pretty-print', 'Pretty Prints the Results.') { |v| options[:pretty_print] = v }
 #op.on('--path-to-mig PATH', '') { |v| options[:path_to_mig] = v }
 options[:log_level] = Logger::WARN
-op.on('--log-level LEVEL', [:debug, :DEBUG, :info, :INFO, :warn, :WARN, :error, :ERROR, :fatal, :FATAL], '') do |v|
+op.on('--log-level LEVEL', [:debug, :DEBUG, :info, :INFO, :warn, :WARN, :error, :ERROR, :fatal, :FATAL], 'The logging level.', 'default: WARN') do |v|
   v = v.upcase # Symbol doesn't support upcase!
   options[:log_level] = Logger.const_defined?(v) ? Logger.const_get(v) : Logger::WARN
 end

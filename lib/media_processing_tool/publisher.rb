@@ -38,8 +38,13 @@ module MediaProcessingTool
       end
     end # stop
 
+    def process(object, params = { })
+      publisher.process_object(params.merge(:object => object))
+    end
+
     def publish(object, params = {})
-      @object = object
+      #@object = object
+      #publisher.process_object(object)
     end # publish
 
   end # Publisher

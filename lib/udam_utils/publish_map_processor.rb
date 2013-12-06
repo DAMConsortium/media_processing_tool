@@ -569,21 +569,22 @@ module UDAMUtils
     # @param [Array<Hash>] objects
     def process_objects(objects, params = {})
       results = [ ]
-      @object = nil
-      [*objects].each do |object|
-        @object = object
+      [*objects].each do |_object|
         begin
-          results << process_object
+          results << process_object(params.merge(:object => _object))
         rescue StandardError, ScriptError => e
-          logger.error "Error processing event.\n\tObject: #{object.inspect}\n\n\tException #{e.inspect}"
-          results << { success: false, error: { message: e.message }, exception: { message: e.message, backtrace: e.backtrace }, object: object }
+          logger.error "Error processing event.\n\tObject: #{_object.inspect}\n\n\tException #{e.inspect}"
+          results << { success: false, error: { message: e.message }, exception: { message: e.message, backtrace: e.backtrace }, object: _object }
         end
       end
       results
     end # process_events
 
     def process_object(params = { })
-      @object = params[:object] if params.has_key?(:object)
+      _object = params.has_key?(:object) ? params[:object] : nil
+      return _object.map { |o| process_object(params.merge(:object => o)) } if _object.is_a?(Array)
+      @object = _object
+
       logger.debug { "Processing Object: \n\n #{PP.pp(object, '')}" }
       parse_object
       ignore_publish_error = false
@@ -634,6 +635,9 @@ module UDAMUtils
             (!to_confirm or (to_confirm and confirm_successful))
         )
       }
+    rescue StandardError, ScriptError => e
+      logger.error "Error processing event.\n\tObject: #{object.inspect}\n\n\tException #{e.inspect}"
+      { success: false, error: { message: e.message }, exception: { message: e.message, backtrace: e.backtrace }, object: object }
     end # process_object
 
     # @param [Hash] params
