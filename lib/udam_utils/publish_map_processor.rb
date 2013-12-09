@@ -437,11 +437,11 @@ module UDAMUtils
       match_found = false
       map.each { |media_types, media_subtypes_with_params|
         [*media_types].each { |media_type|
-          next unless media_type.match(@media_type)
+          next unless media_type.match(@media_type) || @media_type == '*'
           media_subtypes_with_params.each { |media_subtypes, map_params|
             next unless init_publish_params(map_params)
             [*media_subtypes].each { |media_subtype|
-              logger.debug { "Matched media type: #{media_type.to_s}/#{media_subtype.to_s} -> #{@media_type}/#{@media_subtype}" } and match_found = true and break if media_subtype.match(@media_subtype)
+              logger.debug { "Matched media type: #{media_type.to_s}/#{media_subtype.to_s} -> #{@media_type}/#{@media_subtype}" } and match_found = true and break if (media_subtype.match(@media_subtype) || media_subtype == '*')
             }
           }
           break if match_found
@@ -636,7 +636,7 @@ module UDAMUtils
         )
       }
     rescue StandardError, ScriptError => e
-      logger.error "Error processing event.\n\tObject: #{object.inspect}\n\n\tException #{e.inspect}"
+      logger.error "Error processing object.\n\tObject: #{object.inspect}\n\n\tException #{e.inspect}"
       { success: false, error: { message: e.message }, exception: { message: e.message, backtrace: e.backtrace }, object: object }
     end # process_object
 
