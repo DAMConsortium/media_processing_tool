@@ -86,9 +86,13 @@ module MediaProcessingTool
       run_mig = params.fetch(:run_mig, true)
 
       _results = [ ]
+      total_files = _files.length
+      current_file_counter = 0
       _files.each do |file|
+        current_file_counter += 1
         full_file_path = file[@default_file_path_field_name]
 
+        logger.debug { "Processing Document File #{current_file_counter} of #{total_files}. File Path: #{full_file_path}" }
         if run_mig
           _mig = run_mig_on_file(full_file_path)
           file[:metadata_sources] = _mig ? _mig.metadata_sources : { }
