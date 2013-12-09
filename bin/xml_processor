@@ -40,7 +40,7 @@ results = []
 files.each do |file|
   results << { file: file, results: xp.process(file) }
 end
-results = results.pop[:results] unless files.length > 1
+results = results.pop[:results] unless files.empty? || files.length > 1
 if options[:output_results]
   if options[:pretty_print]
     puts JSON.pretty_generate(results)
