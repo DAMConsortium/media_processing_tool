@@ -57,6 +57,8 @@ module MediaProcessingTool
     end # publisher
 
     def process(xml, params = {})
+      @xml_file_path = File.exists?(xml) ? xml : nil
+
       @document = XMLParser.parse(xml)
       @identifier_document = XMLParser.identifier_document
       @params = params
@@ -99,6 +101,7 @@ module MediaProcessingTool
         else
           logger.debug { 'Media Information Gathering SKIPPED. run_mig set to false.' }
         end
+        file[:xml_file_path] = @xml_file_path
         file_result = { file: file }
         file_result[:publish_result] = publisher.process(file) if publish and publisher
 
