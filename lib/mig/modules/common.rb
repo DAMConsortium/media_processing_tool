@@ -233,7 +233,7 @@ class MediaInformationGatherer
               when 720
                 video_system = 'NTSC'
             end
-          when 576
+          when 576, 608
             case width
               when 720
                 video_system = 'PAL'
