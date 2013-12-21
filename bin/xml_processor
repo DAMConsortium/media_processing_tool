@@ -42,9 +42,11 @@ files.each do |file|
 end
 results = results.pop[:results] unless files.empty? || files.length > 1
 if options[:output_results]
+  json_options = { allow_nan: true }
+
   if options[:pretty_print]
-    puts JSON.pretty_generate(results)
+    puts JSON.pretty_generate(results, json_options)
   else
-    puts JSON.fast_generate(results)
+    puts JSON.fast_generate(results, json_options)
   end
 end
