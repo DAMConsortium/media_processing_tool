@@ -31,8 +31,10 @@ mig = MediaInformationGatherer.new(options)
 abort("File Not Found. #{file_path}") unless File.exist?(file_path)
 output = mig.run(file_path)
 
+json_options = { allow_nan: true }
+
 if options[:pretty_print]
-  puts JSON.pretty_generate(output)
+  puts JSON.pretty_generate(output, json_options)
 else
-  puts JSON.fast_generate(output)
+  puts JSON.fast_generate(output, json_options)
 end
