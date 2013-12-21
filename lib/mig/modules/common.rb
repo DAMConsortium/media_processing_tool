@@ -154,21 +154,21 @@ class MediaInformationGatherer
             'dvh6' => 'DV Video C Pro HD 1080i60',
             'AVdv' => 'AVID DV',
             'AVd1' => 'MPEG2 I',
-            'mx5n' => 'MPEG2 IMX PAL 625/60 50Mb/s (FCP)"',
-            'mx5p' => 'MPEG2 IMX NTSC 525/60 40Mb/s (FCP',
-            'mx4n' => 'MPEG2 IMX PAL 625/50 40Mb/s (FCP)"',
-            'mx4p' => 'MPEG2 IMX NTSC 525/60 30Mb/s (FCP',
+            'mx5n' => 'MPEG2 IMX NTSC 625/60 50Mb/s (FCP)"',
+            'mx5p' => 'MPEG2 IMX PAL 525/60 50Mb/s (FCP',
+            'mx4n' => 'MPEG2 IMX NTSC 625/50 40Mb/s (FCP)"',
+            'mx4p' => 'MPEG2 IMX PAL 525/60 40Mb/s (FCP',
             'mx3n' => 'MPEG2 IMX NTSC 625/50 30Mb/s (FCP)',
-            'mx3p' => 'HDV 720p30 (MPEG-2 Video)"),',
+            'mx3p' => 'MPEG2 IMX PAL 625/50 30Mb/s (FCP)',
             'hdv1' => 'Sony HDV 1080i60 (MPEG-2 ',
             'hdv2' => 'FCP HDV 1080i50 (MPEG-2 Video)"',
-            'hdv3' => 'HDV 720p24 (MPEG-2 Video)"),',
+            'hdv3' => 'HDV 720p24 (MPEG-2 Video)',
             'hdv4' => 'HDV 720p25 (MPEG-2 Video)',
             'hdv5' => 'HDV 1080p24 (MPEG-2 Video',
             'hdv6' => 'HDV 1080p25 (MPEG-2 Video)',
             'hdv7' => 'HDV 1080p30 (MPEG-2 Video)',
-            'hdv8' => 'HDV 720p60 JVC (MPEG-2 Vid',
-            'hdv9' => 'HDV 720p50 (MPEG-2 Video)"),',
+            'hdv8' => 'HDV 720p60 JVC (MPEG-2 Video)',
+            'hdv9' => 'HDV 720p50 (MPEG-2 Video)',
             'hdva' => 'AVC-Intra"),',
             'avc1' => 'AVC-Intra',
             'ai5p' => 'AVC-Intra  50M 720p25/50"),',
@@ -228,7 +228,7 @@ class MediaInformationGatherer
 
         # The following case statement is based off of - http://images.apple.com/finalcutpro/docs/Apple_ProRes_White_Paper_October_2012.pdf
         case height
-          when 480, 486
+          when 480, 486, 512
             case width
               when 720
                 video_system = 'NTSC'
