@@ -10,12 +10,13 @@ class MediaType
   # @return [Hash] Will contain :type, :subtype and any other attributes output during the call 
   def run(file_path, options = { })
       media_type, charset = File.mime_type(file_path).split(';') rescue nil
-      type, subtype = media_type.split('/')
-      param = charset.split('=') rescue nil
-      
+      type, subtype = media_type.split('/') if media_type.is_a?(String)
       output = { type: type, subtype: subtype }
-      output[param[0].strip] = param[1].strip rescue nil
+
+      param = charset.strip.split('=') if charset.is_a?(String)
+      output[param.first] = param.last if param.is_a?(Array)
+
       output
   end # run
-  
+
 end # MediaType
