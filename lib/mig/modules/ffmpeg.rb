@@ -111,12 +111,14 @@ class FFMPEG
     end
     alias :is_wide_screen :is_widescreen
     
-    # Use width instead of height because all standard def resolutions have a width of 720 or less
-    # whereas some high def resolutions have a height ~720 such as 698
+    # (@link http://en.wikipedia.org/wiki/List_of_common_resolutions)
+    #
+    # Lowest Width High Resolution Format Found:
+    #   Panasonic DVCPRO100 for 50/60Hz over 720p - SMPTE Resolution = 960x720
     #
     # @return [Boolean]
     def is_high_definition?
-      @is_high_definition ||= @width.to_i > 720
+      @is_high_definition ||= @width.to_i >= 950 and @height.to_i >= 700
     end
     alias :is_high_def? :is_high_definition?
 
