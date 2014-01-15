@@ -22,7 +22,7 @@ op.on('--log-level LEVEL', [:debug, :DEBUG, :info, :INFO, :warn, :WARN, :error, 
   options[:log_level] = Logger.const_defined?(v) ? Logger.const_get(v) : Logger::WARN
 end
 options[:log_to] = STDERR
-op.on('--log-to PATH', '') do |v|
+op.on('--log-to PATH', 'Location output location (ex: stderr, stdout, device path, file path)', "\tdefault: STDERR") do |v|
   options[:log_to] = case v.downcase
                      when 'stderr'; STDERR
                      when 'stdout'; STDOUT
@@ -35,12 +35,10 @@ op.parse!
 
 xp = MediaProcessingTool::XMLProcessor.new(options)
 
-files = ARGV
-results = []
-files.each do |file|
-  results << { file: file, results: xp.process(file) }
-end
-results = results.pop[:results] unless files.empty? || files.length > 1
+file_paths = ARGV
+results = file_paths.map { |file_path| { file: file_path, results: xp.process(file_path) } }
+results = results.pop[:results] if file_paths.length == 1
+
 if options[:output_results]
   json_options = { allow_nan: true }
 
