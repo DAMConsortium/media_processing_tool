@@ -49,17 +49,18 @@ module FinalCutPro
             # File tags may just be a reference to an earlier file tag. A reference only includes an id attribute which we
             # can use to lookup the file from previous parsing.
             file = clip_item[:file] || { }
+            file_id = file[:id]
             if file.keys.count == 1
               # We only got the id with this file tag so look it up in our file cache
-              file = files[file[:id]]
+              file = files[file_id]
             else
               # This file has more than just an ID so it's not a reference to a previous file. Store it in the file cache
-              files[file[:id]] = file
+              files[file_id] = file
             end
             next unless file
 
             file_timecode = file[:timecode] || { }
-            file_timecode_value = file_timecode[:string] || '00:00:00:00'
+            #file_timecode_value = file_timecode[:string] || '00:00:00:00'
             file_timecode_frame = file_timecode[:frame].to_i
 
             file_rate = file[:rate] || { }
@@ -70,8 +71,11 @@ module FinalCutPro
             file_in_frame = clip_in_frame # + file_timecode_frame
             file_out_frame = clip_out_frame # + file_timecode_frame
 
-            file_in_frame_at_clip_frame_rate = clip_in_frame * (file_frame_rate / clip_frame_rate)
-            file_out_frame_at_clip_frame_rate = clip_out_frame * (file_frame_rate / clip_frame_rate)
+            # Use the time base and not the frame rate
+            file_to_clip_rate_ratio = (file_time_base.to_f / clip_time_base.to_f)
+
+            #file_in_frame_at_clip_frame_rate = clip_in_frame * file_to_clip_rate_ratio
+            #file_out_frame_at_clip_frame_rate = clip_out_frame * file_to_clip_rate_ratio
 
             file_in_timecode = frames_to_timecode(file_in_frame, clip_frame_rate, clip_rate_ntsc, ':')
             file_out_timecode = frames_to_timecode(file_out_frame, clip_frame_rate, clip_rate_ntsc, ':')
@@ -83,8 +87,9 @@ module FinalCutPro
             file_path_url = file[:pathurl] || ''
             file_path = URI.unescape(file_path_url).scan(/.*:\/\/\w*(\/.*)/).flatten.first
 
-            file_in_frame_with_offset = file_timecode_frame + (file_in_frame * (file_frame_rate / clip_frame_rate))
-            file_out_frame_with_offset = file_timecode_frame + (file_out_frame * (file_frame_rate / clip_frame_rate))
+
+            file_in_frame_with_offset = file_timecode_frame + (file_in_frame * file_to_clip_rate_ratio)
+            file_out_frame_with_offset = file_timecode_frame + (file_out_frame * file_to_clip_rate_ratio)
             file_in_timecode_with_offset = frames_to_timecode(file_in_frame_with_offset, file_frame_rate, file_rate_ntsc, ';')
             file_out_timecode_with_offset = frames_to_timecode(file_out_frame_with_offset, file_frame_rate, file_rate_ntsc, ';')
 
@@ -95,7 +100,10 @@ module FinalCutPro
               :ntsc => clip_rate[:ntsc],
               :frame_rate => clip_frame_rate,
               :sequence => { :id => sequence_id },
+              :duration_in_seconds => clip_duration_seconds,
+              :duration_in_frames => clip_duration_frames,
               :file => {
+                :id => file_id,
                 :pathurl => file_path_url,
                 :path => file_path,
                 :timecode => file_timecode,
@@ -107,6 +115,8 @@ module FinalCutPro
                 :out_frame => file_out_frame,
                 :in_seconds => file_in_seconds,
                 :out_seconds => file_out_seconds,
+                :in_timecode => file_in_timecode,
+                :out_timecode => file_out_timecode,
                 :in_frame_with_offset => file_in_frame_with_offset,
                 :out_frame_with_offset => file_out_frame_with_offset,
                 :in_timecode_with_offset => file_in_timecode_with_offset,
