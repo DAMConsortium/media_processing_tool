@@ -7,40 +7,40 @@ class MediaInformationGatherer
     STANDARD_VIDEO_FRAME_RATES = [ 23.97, 23.976, 24.0, 24.97, 24.975, 25.0, 29.97, 30.0, 50.0, 60.0 ]
     class << self
 
-      def common_variables(metadata_sources)
+      def metadata_sources; @metadata_sources || { } end
+      def ffmpeg; metadata_sources[:ffmpeg] || { } end
+      def mediainfo; metadata_sources[:mediainfo] || { 'section_type_count' => { 'audio' => 0 } } end
+      def cv; @cv ||= { } end
+
+      def common_variables(_metadata_sources)
+        @metadata_sources = _metadata_sources
+        @cv = { }
+
+        file_path = ffmpeg['path']
+        source_directory = file_path ? File.dirname(File.expand_path(file_path)) : ''
+        creation_date_time = Time.parse(ffmpeg['creation_time']).strftime('%B %d, %Y %r') rescue ffmpeg['creation_time']
+
+        cv[:file_path] = file_path
+        cv[:source_directory] = source_directory
+        cv[:creation_date_time] = creation_date_time
+
         type = :video # Need to figure out where to determine the type from
-        cv = { }
         case type.downcase.to_sym
           when :video
-            _cv = common_video_variables(metadata_sources) rescue { }
-            cv.merge!(_cv)
+            common_audio_variables
+            common_video_variables
           when :audio
-            cv.merge!(common_audio_variables(metadata_sources))
+            common_audio_variables
           when :image
-            cv.merge!(common_image_variables(metadata_sources))
+            common_image_variables
           else
             # What else is there?
         end
         cv
       end # common_variables
 
-      def common_audio_variables(metadata_sources)
-
-      end # common_audio_variables
-
-      def common_image_variables(metadata_sources)
-
-      end # common_image_variables
-
-      def common_video_variables(metadata_sources)
-        #puts metadata_sources
-        cv = { }
-        ffmpeg = metadata_sources[:ffmpeg] || { }
-        mediainfo = metadata_sources[:mediainfo] || { 'section_type_count' => { 'audio' => 0 } }
-        mi_video = mediainfo['Video'] || { }
+      def common_audio_variables
         mi_audio = mediainfo['Audio'] || { }
-
-        creation_date_time = Time.parse(ffmpeg['creation_time']).strftime('%B %d, %Y %r') rescue ffmpeg['creation_time']
 
         duration = ffmpeg['duration']
         if duration
@@ -56,6 +56,23 @@ class MediaInformationGatherer
         section_type_counts = mediainfo['section_type_counts'] || { }
         audio_track_count = section_type_counts['audio']
 
+        cv[:audio_codec_id] = mi_audio['Codec ID']
+        cv[:audio_sample_rate] = ffmpeg['audio_sample_rate']
+        cv[:duration] = duration
+        cv[:duration_long] = duration_long
+        cv[:number_of_audio_tracks] = audio_track_count # Determine the number of audio channels
+        cv[:number_of_audio_channels] = ffmpeg['audio_channel_count']
+
+      end # common_audio_variables
+
+      def common_image_variables
+
+      end # common_image_variables
+
+      def common_video_variables
+        mi_video = mediainfo['Video'] || { }
+        #return unless ffmpeg['video_stream'] or !mi_video.empty?
+
         frame_rate = ffmpeg['frame_rate']
         height = ffmpeg['height']
         width = ffmpeg['width']
@@ -65,28 +82,24 @@ class MediaInformationGatherer
 
         video_system = determine_video_system(height, width, frame_rate)
 
-        file_path = ffmpeg['path']
-        source_directory = File.dirname(File.expand_path(file_path))
 
-        cv[:file_path] = file_path
-        cv[:source_directory] = source_directory
+        #aspect_ratio = ffmpeg['video_stream'] ? (ffmpeg['is_widescreen'] ? '16:9' : '4:3') : nil
+        if ffmpeg['video_stream']
+          aspect_ratio = ffmpeg['is_widescreen'] ? '16:9' : '4:3'
+        else
+          aspect_ratio = nil
+        end
 
-        cv[:aspect_ratio] = ffmpeg['is_widescreen'] ? '16:9' : '4:3'
-        cv[:audio_codec_id] = mi_audio['Codec ID']
-        cv[:audio_sample_rate] = ffmpeg['audio_sample_rate']
+
+        cv[:aspect_ratio] = aspect_ratio
         cv[:bit_depth] = mi_video['Bit depth']
         cv[:calculated_aspect_ratio] = ffmpeg['calculated_aspect_ratio']
         cv[:chroma_subsampling] = mi_video['Chroma subsampling']
-        cv[:creation_date_time] = creation_date_time
         cv[:display_aspect_ratio] = ffmpeg['display_aspect_ratio']
-        cv[:duration] = duration
-        cv[:duration_long] = duration_long
         cv[:frames_per_second] = frame_rate # Video frames per second
         cv[:height] = height
         cv[:is_high_definition] = ffmpeg['is_high_definition'] # Determine if video is Standard Def or High Definition
         cv[:is_widescreen] = ffmpeg['is_widescreen']
-        cv[:number_of_audio_tracks] = audio_track_count # Determine the number of audio channels
-        cv[:number_of_audio_channels] = ffmpeg['audio_channel_count']
         cv[:pixel_aspect_ratio] = ffmpeg['pixel_aspect_ratio']
         cv[:resolution] = ffmpeg['resolution']
         cv[:scan_order] = mi_video['Scan order']
