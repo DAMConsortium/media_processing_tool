@@ -102,16 +102,22 @@ class FFMPEG
       not @invalid
     end
     
-    # Determines if the aspect from dimensions is widescreen (> 1.4)
-    # 1.4 is derived from the following table {http://en.wikipedia.org/wiki/Storage_Aspect_Ratio#Previous_and_currently_used_aspect_ratios Aspect Ratios}
+    # Determines if the aspect from dimensions is widescreen (> 1.5 (3/2)
+    # 1.55 is derived from the following tables
+    #   {http://en.wikipedia.org/wiki/Storage_Aspect_Ratio#Previous_and_currently_used_aspect_ratios Aspect Ratios}
+    #   {http://en.wikipedia.org/wiki/List_of_common_resolutions#Television}
+    #
+    # 1.55:1 (14:9): Widescreen aspect ratio sometimes used in shooting commercials etc. as a compromise format
+    # between 4:3 (12:9) and 16:9. When converted to a 16:9 frame, there is slight pillarboxing, while conversion to
+    # 4:3 creates slight letterboxing. All widescreen content on ABC Family's SD feed is presented in this ratio.
     #
     # @return [Boolean]
     def is_widescreen?
-      @is_widescreen ||= aspect_from_dimensions > 1.4
+      @is_widescreen ||= aspect_from_dimensions >= 1.55
     end
     alias :is_wide_screen :is_widescreen
     
-    # (@link http://en.wikipedia.org/wiki/List_of_common_resolutions)
+    # (@link http://en.wikipedia.osrg/wiki/List_of_common_resolution)
     #
     # Lowest Width High Resolution Format Found:
     #   Panasonic DVCPRO100 for 50/60Hz over 720p - SMPTE Resolution = 960x720
@@ -165,7 +171,7 @@ class FFMPEG
     def aspect_from_dar
       return nil unless dar
       return @aspect_from_dar if @aspect_from_dar
-      w, h = dar.split(":")
+      w, h = dar.split(':')
       aspect = w.to_f / h.to_f
       @aspect_from_dar = aspect.zero? ? nil : aspect
     end
