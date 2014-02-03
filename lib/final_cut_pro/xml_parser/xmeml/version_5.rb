@@ -38,13 +38,12 @@ module FinalCutPro
             bin_path << ancestor_node.find('./name').first.content.to_s unless ancestor_node.find('./name').first.content.to_s.empty?
           end
           return '' if bin_path.empty?
-          return ("/" + bin_path.join("/") + "/").to_s
+          return "/#{bin_path.join('/')}/"
         end
 
         def get_clip_hash_by_id(doc, id)
           #puts "ID: #{id}"
-          id = id.dup
-          id.gsub!(/["\s]/, ' ' => "\\s", '"' => '&quot;')
+          id = id.dup.gsub(/["\s]/, ' ' => "\\s", '"' => '&quot;')
           clip = doc.find("//clip[@id=\"#{id}\"]").first
           return { } unless clip
           return xml_node_to_hash(clip) || { }
@@ -69,11 +68,19 @@ module FinalCutPro
         def get_all_labels(node)
           labels = []
           node.find('ancestor::bin/labels|ancestor::clip/labels|ancestor::sequence/labels|ancestor::clipitem/labels|ancestor::generatoritem/labels').each do |labels_node|
+            parent = labels_node.parent
+            first_from = parent.find('./name|@id').first
+
+            # Name field responds to .content where as id attribute value is found with .value
+            from_name_or_id = first_from.respond_to?(:content) ? first_from.content : first_from.value
+
             label_set = {}
-            label_set[:from] = {labels_node.parent.name.to_s => labels_node.parent.find('./name|@id').first.value.to_s}
+            label_set[:from] = { parent.name.to_s => from_name_or_id }
             label_set[:labels] = []
+
             labels_node.find('./*').each do |label_node_item|
-              label_set[:labels] << {label_node_item.name.to_s => label_node_item.content.to_s} unless label_node_item.content.nil? or label_node_item.content.empty?
+              label_node_item_content = label_node_item.content
+              label_set[:labels] << {label_node_item.name.to_s => label_node_item_content.to_s} unless label_node_item_content.nil? or label_node_item_content.empty?
             end
             labels << label_set
           end
@@ -84,14 +91,13 @@ module FinalCutPro
           comments = []
           node.find('ancestor::bin/comments|ancestor::clip/comments|ancestor::sequence/comments|ancestor::clipitem/comments|ancestor::generatoritem/comments').each do |comments_node|
             parent = comments_node.parent
-            comment_ids = parent.find('./name|@id')
-            first_comment_id = comment_ids.first
+            first_from = parent.find('./name|@id').first
 
             # Name field responds to .content where as id attribute value is found with .value
-            comment_name_or_id = first_comment_id.respond_to?(:content) ? first_comment_id.content : first_comment_id.value
+            from_name_or_id = first_from.respond_to?(:content) ? first_from.content : first_from.value
 
             comment_set = {}
-            comment_set[:from] = comment_name_or_id # {parent.name.to_s => parent.find('./name|@id').first.value.to_s}
+            comment_set[:from] = { parent.name.to_s => from_name_or_id }
             comment_set[:comments] = []
             comments_node.find('./*').each do |comment_node_item|
               comment_set[:comments] << {comment_node_item.name.to_s => comment_node_item.content.to_s} unless comment_node_item.content.nil? or comment_node_item.content.empty?
@@ -104,8 +110,14 @@ module FinalCutPro
         def get_logging_info(node)
           logginginfos = []
           node.find('ancestor::clip/logginginfo|ancestor::sequence/logginginfo|ancestor::clipitem/logginginfo|ancestor::generatoritem/logginginfo').each do |logginginfo_node|
+            parent = logginginfo_node.parent
+            first_from = parent.find('./name|@id').first
+
+            # Name field responds to .content where as id attribute value is found with .value
+            from_name_or_id = first_from.respond_to?(:content) ? first_from.content : first_from.value
+
             logginginfo_set = {}
-            logginginfo_set[:from] = {logginginfo_node.parent.name.to_s => logginginfo_node.parent.find('./name|@id').first.value.to_s}
+            logginginfo_set[:from] = { parent.name.to_s => from_name_or_id }
             logginginfo_set[:logginginfo] = {}
             logginginfo_node.find('./*').each do |logginginfo_node_item|
               logginginfo_set[:logginginfo][logginginfo_node_item.name.to_s] = logginginfo_node_item.content.to_s unless logginginfo_node_item.content.nil? or logginginfo_node_item.content.empty?
