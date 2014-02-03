@@ -37,12 +37,14 @@ module FinalCutPro
           node.find('ancestor::bin').each do |ancestor_node|
             bin_path << ancestor_node.find('./name').first.content.to_s unless ancestor_node.find('./name').first.content.to_s.empty?
           end
-          return "" if bin_path.empty?
+          return '' if bin_path.empty?
           return ("/" + bin_path.join("/") + "/").to_s
         end
 
         def get_clip_hash_by_id(doc, id)
           #puts "ID: #{id}"
+          id = id.dup
+          id.gsub!(/["\s]/, ' ' => "\\s", '"' => '&quot;')
           clip = doc.find("//clip[@id=\"#{id}\"]").first
           return { } unless clip
           return xml_node_to_hash(clip) || { }
@@ -50,6 +52,10 @@ module FinalCutPro
 
         def get_clipitem_hash(node)
           return xml_node_to_hash(node.parent)
+        end
+
+        def get_file_clipitems(node, file_id = nil)
+
         end
 
         def get_all_metadata(node)
@@ -77,8 +83,15 @@ module FinalCutPro
         def get_all_comments(node)
           comments = []
           node.find('ancestor::bin/comments|ancestor::clip/comments|ancestor::sequence/comments|ancestor::clipitem/comments|ancestor::generatoritem/comments').each do |comments_node|
+            parent = comments_node.parent
+            comment_ids = parent.find('./name|@id')
+            first_comment_id = comment_ids.first
+
+            # Name field responds to .content where as id attribute value is found with .value
+            comment_name_or_id = first_comment_id.respond_to?(:content) ? first_comment_id.content : first_comment_id.value
+
             comment_set = {}
-            comment_set[:from] = {comments_node.parent.name.to_s => comments_node.parent.find('./name|@id').first.value.to_s}
+            comment_set[:from] = comment_name_or_id # {parent.name.to_s => parent.find('./name|@id').first.value.to_s}
             comment_set[:comments] = []
             comments_node.find('./*').each do |comment_node_item|
               comment_set[:comments] << {comment_node_item.name.to_s => comment_node_item.content.to_s} unless comment_node_item.content.nil? or comment_node_item.content.empty?
@@ -145,20 +158,25 @@ module FinalCutPro
           end
 
           file_name = node.find('./name').first.content.to_s # Should equal the base name from the path url
-
+          file_path_url = path_url_element.content.to_s
           file_hash = {
-              :id => file_id,
-              :name => file_name,
-              :path_url => path_url_element.content.to_s
+            :id => file_id,
+            :name => file_name,
+            :path_url => file_path_url
           }
-          file_hash[:path_on_file_system] = CGI::unescape(URI(file_hash[:path_url]).path)
+
+          # a plus (+) would be converted to a space using CGI.unescape so we only escape %## encoded values from the pathurl
+          #file_hash[:path_on_file_system] = CGI::unescape(URI(file_hash[:path_url]).path)
+          file_hash[:path_on_file_system] = URI(file_path_url).path.gsub(/(%(?:[2-9]|[A-F])(?:\d|[A-F]))/) { |v| CGI.unescape(v) }
           file_hash[:file_node_full] = xml_node_to_hash node
           file_hash[:project_name] = get_project_name node
           file_hash[:bin_path] = get_bin_path node
           file_hash[:clipitem_node_full] = get_clipitem_hash node
 
+          file_hash[:clipitems] = get_file_clipitems(node, file_id)
+
           master_clip_id = file_hash[:clipitem_node_full][:masterclipid]
-          file_hash[:masterclip_node_full] = (master_clip_id.nil? or master_clip_id.empty?) ? { } : get_clip_hash_by_id(node.doc, master_clip_id.gsub(/\s/, "\\s"))
+          file_hash[:masterclip_node_full] = (master_clip_id.nil? or master_clip_id.empty?) ? { } : get_clip_hash_by_id(node.doc, master_clip_id)
           file_hash[:metadata] = get_all_metadata node
           file_hash[:labels] = get_all_labels node
           file_hash[:comments] = get_all_comments node
