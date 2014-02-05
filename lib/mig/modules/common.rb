@@ -118,6 +118,8 @@ class MediaInformationGatherer
       # http://www.videolan.org/developers/vlc/src/misc/fourcc.c
       def fourcc_codes
         @fourcc_codes ||= {
+            '2vuy' => 'Apple FCP Uncompressed 8-bit 4:2:2',
+            'v210' => 'Apple FCP Uncompressed 10-bit 4:2:2',
             'apcn' => 'Apple ProRes Standard',
             'apch' => 'Apple ProRes High Quality (HQ)',
             'apcs' => 'Apple ProRes LT',
@@ -221,7 +223,7 @@ class MediaInformationGatherer
       end # fourcc_codes
 
       def video_codec_descriptions
-        @video_codec_descriptions ||= @fourcc_codes.merge({
+        @video_codec_descriptions ||= fourcc_codes.merge({
           27 => 'MPEG-TS',
         })
       end
