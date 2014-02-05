@@ -5,7 +5,7 @@ class ExifTool
   DEFAULT_EXECUTABLE_PATH = 'exiftool'
 
   def initialize(options = { })
-    #@logger ||= Logger.new(STDOUT)
+    #@logger = options[:logger] || Logger.new(STDOUT)
     @exiftool_cmd_path = options.fetch(:exiftool_cmd_path, DEFAULT_EXECUTABLE_PATH)
   end # initialize
   
