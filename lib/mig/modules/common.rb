@@ -78,7 +78,7 @@ class MediaInformationGatherer
         width = ffmpeg['width']
 
         video_codec_id = mi_video['Codec ID']
-        video_codec_description = fourcc_codes.fetch(video_codec_id, 'Unknown')
+        video_codec_description = video_codec_descriptions.fetch(video_codec_id, 'Unknown')
 
         video_system = determine_video_system(height, width, frame_rate)
 
@@ -115,7 +115,7 @@ class MediaInformationGatherer
       end # common_video_variables
 
       # A hash of fourcc codes
-          # http://www.videolan.org/developers/vlc/src/misc/fourcc.c
+      # http://www.videolan.org/developers/vlc/src/misc/fourcc.c
       def fourcc_codes
         @fourcc_codes ||= {
             'apcn' => 'Apple ProRes Standard',
@@ -168,32 +168,32 @@ class MediaInformationGatherer
             'AVdv' => 'AVID DV',
             'AVd1' => 'MPEG2 I',
             'mx5n' => 'MPEG2 IMX NTSC 625/60 50Mb/s (FCP)',
-            'mx5p' => 'MPEG2 IMX PAL 525/60 50Mb/s (FCP',
-            'mx4n' => 'MPEG2 IMX NTSC 625/50 40Mb/s (FCP)',
-            'mx4p' => 'MPEG2 IMX PAL 525/60 40Mb/s (FCP',
-            'mx3n' => 'MPEG2 IMX NTSC 625/50 30Mb/s (FCP)',
+            'mx5p' => 'MPEG2 IMX PAL 525/50 50Mb/s (FCP',
+            'mx4n' => 'MPEG2 IMX NTSC 625/60 40Mb/s (FCP)',
+            'mx4p' => 'MPEG2 IMX PAL 525/50 40Mb/s (FCP',
+            'mx3n' => 'MPEG2 IMX NTSC 625/60 30Mb/s (FCP)',
             'mx3p' => 'MPEG2 IMX PAL 525/50 30Mb/s (FCP)',
-            'hdv1' => 'Sony HDV 1080i60 (MPEG-2 ',
-            'hdv2' => 'FCP HDV 1080i50 (MPEG-2 Video)"',
-            'hdv3' => 'HDV 720p24 (MPEG-2 Video)',
-            'hdv4' => 'HDV 720p25 (MPEG-2 Video)',
-            'hdv5' => 'HDV 1080p24 (MPEG-2 Video',
-            'hdv6' => 'HDV 1080p25 (MPEG-2 Video)',
-            'hdv7' => 'HDV 1080p30 (MPEG-2 Video)',
-            'hdv8' => 'HDV 720p60 JVC (MPEG-2 Video)',
-            'hdv9' => 'HDV 720p50 (MPEG-2 Video)',
-            'hdva' => 'AVC-Intra"),',
+            'hdv1' => 'HDV 720p30',
+            'hdv2' => 'HDV 1080i60',
+            'hdv3' => 'HDV 1080i50',
+            'hdv4' => 'HDV 720p24',
+            'hdv5' => 'HDV 720p25',
+            'hdv6' => 'HDV 1080p24',
+            'hdv7' => 'HDV 1080p25',
+            'hdv8' => 'HDV 1080p30',
+            'hdv9' => 'HDV 720p60',
+            'hdva' => 'HDV 720p50',
             'avc1' => 'AVC-Intra',
-            'ai5p' => 'AVC-Intra  50M 720p25/50,',
+            'ai5p' => 'AVC-Intra  50M 720p25/50',
             'ai5q' => 'AVC-Intra  50M 1080p25/50',
             'ai52' => 'AVC-Intra  50M 1080p24/30',
-            'ai53' => 'AVC-Intra  50M 1080i50,',
+            'ai53' => 'AVC-Intra  50M 1080i50',
             'ai55' => 'AVC-Intra  50M 1080i60',
-            'ai56' => 'AVC-Intra 100M 720p24/',
-            'ai1p' => 'AVC-Intra 100M 720p25/50,',
+            'ai56' => 'AVC-Intra 100M 720p24/30',
+            'ai1p' => 'AVC-Intra 100M 720p25/50',
             'ai1q' => 'AVC-Intra 100M 1080p25/50',
             'ai12' => 'AVC-Intra 100M 1080p24/30',
-            'ai13' => 'AVC-Intra 100M 1080i50,',
+            'ai13' => 'AVC-Intra 100M 1080i50',
             'ai15' => 'AVC-Intra 100M 1080i60',
             'ai16' => 'AVC-Intra 100M 1080i60',
             'mpgv' => 'MPEG-2',
@@ -219,6 +219,12 @@ class MediaInformationGatherer
             'jpeg' => 'Photo JPEG',
         }
       end # fourcc_codes
+
+      def video_codec_descriptions
+        @video_codec_descriptions ||= @fourcc_codes.merge({
+          27 => 'MPEG-TS',
+        })
+      end
 
       def determine_video_system(height, width, frame_rate)
         # http://en.wikipedia.org/wiki/Broadcast_television_system
