@@ -1,5 +1,6 @@
 #!/usr/bin/env ruby
-$:.unshift(File.expand_path('../lib'))
+lib_path = File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib'))
+$:.unshift(lib_path) if !$:.include?(lib_path) and File.exists?(lib_path)
 require 'optparse'
 require 'pp'
 
