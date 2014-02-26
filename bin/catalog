@@ -1,0 +1,99 @@
+#!/usr/bin/env ruby
+lib_path = File.expand_path('../../lib', __FILE__)
+$:.unshift(lib_path) if !$:.include?(lib_path) and File.exists?(lib_path)
+
+require 'cgi'
+require 'csv'
+require 'json'
+require 'logger'
+require 'open3'
+require 'optparse'
+require 'shellwords'
+require 'time'
+require 'uri'
+
+require 'mig/modules/ffmpeg'
+
+options = { }
+options_file_name = nil
+op = OptionParser.new
+op.on('--path PATH', 'The path to catalog') { |v| options[:path_to_catalog] = v }
+op.on('--[no-]process-xml-files', 'Media File Paths will be pulled from FCP xml files found using the path.') { |v| options[:process_xml_files] = v }
+op.on('--destination-path PATH', 'The path and file name of the csv to create.') { |v| options[:destination_path] = v }
+op.on('--help', 'Display this message.') { puts op; exit }
+op.parse!(ARGV.dup)
+op.parse!(ARGV.dup) if op.load(options_file_name)
+
+@logger = Logger.new(STDOUT)
+def logger; @logger end
+
+@ffmpeg = FFMPEG.new
+path_to_catalog = options[:path_to_catalog]
+process_xml_files = options[:process_xml_files]
+destination_path = options[:destination_path]
+
+path_to_catalog  ||= '/assets/**/*.mov'
+destination_path ||= '/tmp/assets.csv'
+
+def unescape_fcp_file_path_url(file_path_url)
+  URI(file_path_url).path.gsub(/(%(?:[2-9]|[A-F])(?:\d|[A-F]))/) { |v| CGI.unescape(v) }
+end
+
+def process_media_file_paths(media_file_paths, options = { })
+  xml_file_path = options[:xml_file_path]
+  xml_file_path_field_name = options[:xml_file_path_field_name] || 'XML File Path'
+
+  media_file_paths = media_file_paths.uniq
+  media_file_path_data = { }
+  media_file_path_count = media_file_paths.length
+  media_file_path_counter = 0
+  media_file_paths.each do |mfp|
+    media_file_path_counter += 1
+    logger.debug { "Processing Media File Path #{media_file_path_counter} of #{media_file_path_count}. '#{mfp}'" }
+    next unless File.exists?(mfp)
+    md = @ffmpeg.run(mfp)
+    md[xml_file_path_field_name] = xml_file_path if xml_file_path
+    md = md.delete_if { |k, v| %w(output command).include? k }
+    media_file_path_data[mfp] = md
+  end
+  media_file_path_data
+end
+
+def get_media_file_paths_from_xml(xml_file_path)
+  _media_file_paths = [ ]
+  File.open(xml_file_path).read().scan(/<pathurl>(.*)<\/pathurl>/) { |file_path_url_ary| _media_file_paths << unescape_fcp_file_path_url(file_path_url_ary.first) }
+  _media_file_paths
+end
+
+
+if process_xml_files
+  media_file_paths = [ ]
+  media_file_paths_by_xml_file = { }
+  xml_file_paths = Dir.glob(path_to_catalog)
+  xml_file_path_count = xml_file_paths.length
+  xml_file_path_counter = 0
+  xml_file_paths.each do |xml_file_path|
+    xml_file_path_counter += 1
+    logger.debug { "Processing XML File #{xml_file_path_counter} of #{xml_file_path_count}. #{xml_file_path}" }
+    media_file_paths_from_xml = get_media_file_paths_from_xml(xml_file_path)
+    media_file_paths_by_xml_file[xml_file_path] = media_file_paths_from_xml
+    media_file_paths = media_file_paths + media_file_paths_from_xml
+  end
+  media_file_paths_with_data = process_media_file_paths(media_file_paths)
+else
+  media_file_paths = Dir.glob(path_to_catalog)
+  media_file_paths_with_data = process_media_file_paths(media_file_paths)
+end
+
+media_file_path_field_name = 'Media File Path'
+fields = { media_file_path_field_name => '' }
+media_file_paths_with_data.each { |_, data| fields.merge!(data) }
+empty_record = Hash[fields.map { |k,_| [k, ''] }]
+
+CSV.open(destination_path, 'w') do |csv|
+  csv << fields.keys
+  media_file_paths_with_data.each do |media_file_path, data|
+    data[media_file_path_field_name] = media_file_path
+    csv << empty_record.merge(data).values
+  end
+end
