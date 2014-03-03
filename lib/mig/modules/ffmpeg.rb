@@ -124,7 +124,7 @@ class FFMPEG
     #
     # @return [Boolean]
     def is_high_definition?
-      @is_high_definition ||= @width.to_i >= 950 and @height.to_i >= 700
+      @is_high_definition ||= ( (width.respond_to?(:to_i) and height.respond_to?(:to_i)) ? (@width.to_i >= 950 and @height.to_i >= 700) : false )
     end
     alias :is_high_def? :is_high_definition?
 
