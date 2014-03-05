@@ -67,6 +67,38 @@ class MediaInformationGatherer
 
       end # common_audio_variables
 
+      # @return [Fixed]
+      def aspect_from_dimensions(height, width)
+        aspect = width.to_f / height.to_f
+        aspect.nan? ? nil : aspect
+      end
+
+      # Determines if the aspect from dimensions is widescreen (> 1.5 (3/2)
+      # 1.55 is derived from the following tables
+      #   {http://en.wikipedia.org/wiki/Storage_Aspect_Ratio#Previous_and_currently_used_aspect_ratios Aspect Ratios}
+      #   {http://en.wikipedia.org/wiki/List_of_common_resolutions#Television}
+      #
+      # 1.55:1 (14:9): Widescreen aspect ratio sometimes used in shooting commercials etc. as a compromise format
+      # between 4:3 (12:9) and 16:9. When converted to a 16:9 frame, there is slight pillarboxing, while conversion to
+      # 4:3 creates slight letterboxing. All widescreen content on ABC Family's SD feed is presented in this ratio.
+      #
+      # @return [Boolean]
+      def is_widescreen?(height, width)
+        _aspect_from_dimensions = aspect_from_dimensions(height, width)
+        (_aspect_from_dimensions ? (_aspect_from_dimensions >= 1.55) : false)
+      end
+
+      # (@link http://en.wikipedia.osrg/wiki/List_of_common_resolution)
+      #
+      # Lowest Width High Resolution Format Found:
+      #   Panasonic DVCPRO100 for 50/60Hz over 720p - SMPTE Resolution = 960x720
+      #
+      # @return [Boolean]
+      def is_high_definition?(height, width)
+        (width.respond_to?(:to_i) and height.respond_to?(:to_i)) ? (width.to_i >= 950 and height.to_i >= 700) : false
+      end
+
+
       def common_image_variables
 
       end # common_image_variables
@@ -79,11 +111,15 @@ class MediaInformationGatherer
         height = ffmpeg['height'] || mi_video['Height']
         width = ffmpeg['width'] || mi_video['Width']
 
+        is_widescreen = is_widescreen?(height, width)
+        is_high_definition = is_high_definition?(height, width)
+
+        calculated_aspect_ratio = ffmpeg['calculated_aspect_ratio'] || (height.respond_to?(:to_f) and width.respond_to?(:to_f) ? (width.to_f / height.to_f) : nil)
+
         video_codec_id = mi_video['Codec ID']
         video_codec_description = video_codec_descriptions.fetch(video_codec_id, 'Unknown')
 
         video_system = determine_video_system(height, width, frame_rate)
-
 
         #aspect_ratio = ffmpeg['video_stream'] ? (ffmpeg['is_widescreen'] ? '16:9' : '4:3') : nil
         if ffmpeg['video_stream']
@@ -92,16 +128,15 @@ class MediaInformationGatherer
           aspect_ratio = nil
         end
 
-
         cv[:aspect_ratio] = aspect_ratio
         cv[:bit_depth] = mi_video['Bit depth']
-        cv[:calculated_aspect_ratio] = ffmpeg['calculated_aspect_ratio']
+        cv[:calculated_aspect_ratio] = calculated_aspect_ratio
         cv[:chroma_subsampling] = mi_video['Chroma subsampling']
         cv[:display_aspect_ratio] = ffmpeg['display_aspect_ratio']
         cv[:frames_per_second] = frame_rate # Video frames per second
         cv[:height] = height
-        cv[:is_high_definition] = ffmpeg['is_high_definition'] # Determine if video is Standard Def or High Definition
-        cv[:is_widescreen] = ffmpeg['is_widescreen']
+        cv[:is_high_definition] = is_high_definition # Determine if video is Standard Def or High Definition
+        cv[:is_widescreen] = is_widescreen
         cv[:pixel_aspect_ratio] = ffmpeg['pixel_aspect_ratio']
         cv[:resolution] = ffmpeg['resolution']
         cv[:scan_order] = mi_video['Scan order']
