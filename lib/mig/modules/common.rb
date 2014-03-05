@@ -10,6 +10,7 @@ class MediaInformationGatherer
       def metadata_sources; @metadata_sources || { } end
       def ffmpeg; metadata_sources[:ffmpeg] || { } end
       def mediainfo; metadata_sources[:mediainfo] || { 'section_type_count' => { 'audio' => 0 } } end
+
       def cv; @cv ||= { } end
 
       def common_variables(_metadata_sources)
@@ -41,6 +42,7 @@ class MediaInformationGatherer
 
       def common_audio_variables
         mi_audio = mediainfo['Audio'] || { }
+        mi_audio = { } unless mi_audio.is_a?(Hash)
 
         duration = ffmpeg['duration']
         if duration
@@ -73,9 +75,9 @@ class MediaInformationGatherer
         mi_video = mediainfo['Video'] || { }
         #return unless ffmpeg['video_stream'] or !mi_video.empty?
 
-        frame_rate = ffmpeg['frame_rate']
-        height = ffmpeg['height']
-        width = ffmpeg['width']
+        frame_rate = ffmpeg['frame_rate'] || mi_video['Frame rate']
+        height = ffmpeg['height'] || mi_video['Height']
+        width = ffmpeg['width'] || mi_video['Width']
 
         video_codec_id = mi_video['Codec ID']
         video_codec_description = video_codec_descriptions.fetch(video_codec_id, 'Unknown')
