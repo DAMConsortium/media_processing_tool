@@ -58,11 +58,20 @@ class FFMPEG
       
       if video_stream
         # Example Strings
+        #
+        #  "dvvideo (dvc  / 0x20637664), 720x480, 28771 kb/s): unspecified pixel format"
         #  "mpeg2video (4:2:2) (mx5n / 0x6E35786D), yuv422p, 720x512 [SAR 512:405 DAR 16:9], 50084 kb/s, SAR 40:33 DAR 75:44, 29.97 fps, 29.97 tbr, 2997 tbn, 59.94 tbc"
         #  "h264 (Main) (avc1 / 0x31637661), yuv420p, 854x480 [SAR 1:1 DAR 427:240], 2196 kb/s, 29.97 fps, 29.97 tbr, 2997 tbn, 59.94 tbc"
         #  "prores (apcn / 0x6E637061), yuv422p10le, 720x486, 23587 kb/s, SAR 10:11 DAR 400:297, 29.97 fps, 29.97 tbr, 2997 tbn, 2997 tbc"
 
-        @video_codec, @colorspace, @resolution, video_bitrate, aspect_ratios = video_stream.split(/\s?,\s?/)
+        if video_stream.end_with?('unspecified pixel format')
+          @video_codec, @resolution, video_bitrate = video_stream.split(':').first.split(/\s?,\s?/)
+          video_bitrate = video_bitrate[0..-2] if video_bitrate and video_bitrate.end_with?(')')
+        else
+          @video_codec, @colorspace, @resolution, video_bitrate, aspect_ratios = video_stream.split(/\s?,\s?/)
+        end
+
+
         @video_bitrate = video_bitrate =~ %r(\A(\d+) kb/s\Z) ? $1.to_i : nil
 
 
