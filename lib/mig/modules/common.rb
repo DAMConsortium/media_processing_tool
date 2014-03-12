@@ -107,7 +107,9 @@ class MediaInformationGatherer
         mi_video = mediainfo['Video'] || { }
         #return unless ffmpeg['video_stream'] or !mi_video.empty?
 
-        frame_rate = ffmpeg['frame_rate'] || mi_video['Frame rate']
+        frame_rate = ffmpeg['frame_rate']
+        frame_rate ||= mi_video['Frame rate'].respond_to?(:to_f) ? mi_video['Frame rate'].to_f : mi_video['Frame rate']
+
         height = ffmpeg['height'] || mi_video['Height']
         width = ffmpeg['width'] || mi_video['Width']
 
