@@ -73,7 +73,7 @@ class MediaInformationGatherer
         aspect.nan? ? nil : aspect
       end
 
-      # Determines if the aspect from dimensions is widescreen (> 1.5 (3/2)
+      # Determines if the aspect from dimensions is widescreen (>= 1.5 (3/2)
       # 1.55 is derived from the following tables
       #   {http://en.wikipedia.org/wiki/Storage_Aspect_Ratio#Previous_and_currently_used_aspect_ratios Aspect Ratios}
       #   {http://en.wikipedia.org/wiki/List_of_common_resolutions#Television}
@@ -113,7 +113,9 @@ class MediaInformationGatherer
         height = ffmpeg['height'] || mi_video['Height']
         width = ffmpeg['width'] || mi_video['Width']
 
-        is_widescreen = is_widescreen?(height, width)
+        is_widescreen = ffmpeg['is_widescreen']
+        is_widescreen ||= is_widescreen?(height, width) if is_widescreen.nil?
+
         is_high_definition = is_high_definition?(height, width)
 
         calculated_aspect_ratio = ffmpeg['calculated_aspect_ratio'] || (height.respond_to?(:to_f) and width.respond_to?(:to_f) ? (width.to_f / height.to_f) : nil)
