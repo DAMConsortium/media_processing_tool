@@ -4,7 +4,7 @@ class MediaInformationGatherer
 
   class Common
 
-    STANDARD_VIDEO_FRAME_RATES = [ 23.97, 23.976, 24.0, 24.97, 24.975, 25.0, 29.97, 30.0, 50.0, 60.0 ]
+    STANDARD_VIDEO_FRAME_RATES = [ 23.97, 23.976, 24.0, 24.97, 24.975, 25.0, 29.97, 30.0, 50.0, 59.94, 60.0 ]
     class << self
 
       def metadata_sources; @metadata_sources || { } end
