@@ -122,7 +122,7 @@ class FFMPEG
     #
     # @return [Boolean]
     def is_widescreen?
-      @is_widescreen ||= (aspect_from_dimensions ? (aspect_from_dimensions >= 1.55) : false)
+      @is_widescreen ||= (calculated_aspect_ratio ? (calculated_aspect_ratio >= 1.55) : false)
     end
     alias :is_wide_screen :is_widescreen
     
