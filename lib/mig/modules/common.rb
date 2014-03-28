@@ -292,7 +292,7 @@ class MediaInformationGatherer
         case height
           when 480, 486, 512
             case width
-              when 720, 848
+              when 720, 848, 854
                 video_system = 'NTSC'
             end
           when 576, 608
@@ -319,4 +319,3 @@ class MediaInformationGatherer
   end # Common
 
 end # MediaInformationGatherer
-
