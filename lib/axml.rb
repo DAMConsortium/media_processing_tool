@@ -1,13 +1,13 @@
-begin
-  require 'libxml'
-  XML_PARSER ||= :libxml
-rescue LoadError
-  require 'rexml/document'
-  XML_PARSER ||= :rexml
-end
-
 # Abstracted XML Module
 module AXML
+
+  begin
+    require 'libxml'
+    XML_PARSER = :libxml unless defined?(XML_PARSER)
+  rescue LoadError
+    require 'rexml/document'
+    XML_PARSER = :rexml unless defined?(XML_PARSER)
+  end
 
   module REXMLAbstraction
     class << self
@@ -45,13 +45,13 @@ module AXML
 
   end # ModuleLibXML
 
-  if XML_PARSER == :libxml
-    #puts 'Including LibXML'
-    include LibXMLAbstraction
-  else
-    #puts 'Including REXML'
-    include REXMLAbstraction
-  end
+  # if XML_PARSER == :libxml
+  #   #puts 'Including LibXML'
+  #   include LibXMLAbstraction
+  # else
+  #   #puts 'Including REXML'
+  #   include REXMLAbstraction
+  # end
 
   # Force LibXML Usage
   def self.xml_as_document(xml); LibXMLAbstraction.xml_as_document(xml); end # self.xml_as_document
