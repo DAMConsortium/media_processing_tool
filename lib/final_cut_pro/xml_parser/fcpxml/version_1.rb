@@ -18,7 +18,7 @@ module FinalCutPro
         def parse_files(xml = @xml_document, options = { })
           xml.find('//asset').map do |asset_node|
             hash = xml_node_to_hash(asset_node)
-            hash.merge!({ path_on_file_system: CGI::unescape(URI(hash[:src]).path) })
+            hash.merge!({ :path_on_file_system => CGI::unescape(URI(hash[:src]).path) })
           end
         end # parse_files
 

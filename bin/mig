@@ -1,5 +1,6 @@
 #!/usr/bin/env ruby
-lib_path = File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib'))
+#lib_path = File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib'))
+lib_path = File.expand_path('../../lib', __FILE__)
 $:.unshift(lib_path) if !$:.include?(lib_path) and File.exists?(lib_path)
 require 'json'
 require 'optparse'
@@ -31,7 +32,7 @@ mig = MediaInformationGatherer.new(options)
 abort("File Not Found. #{file_path}") unless File.exist?(file_path)
 output = mig.run(file_path)
 
-json_options = { allow_nan: true }
+json_options = { :allow_nan => true }
 
 if options[:pretty_print]
   puts JSON.pretty_generate(output, json_options)

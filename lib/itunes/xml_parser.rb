@@ -6,7 +6,7 @@ module ITunes
   class XMLParser
 
     def self.parse(xml, params = {})
-      new(params.merge(file: xml))
+      new(params.merge(:file => xml))
     end # self.parse
 
     attr_reader :parsed
@@ -28,7 +28,7 @@ module ITunes
       @files ||= begin
         _files = [ ]
         tracks.each do |id, track|
-          _files << track.merge(path_on_file_system: CGI.unescape(URI(track['Location']).path))
+          _files << track.merge(:path_on_file_system => CGI.unescape(URI(track['Location']).path))
         end
         _files
       end

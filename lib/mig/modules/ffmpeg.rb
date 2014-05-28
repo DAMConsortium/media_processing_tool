@@ -211,7 +211,7 @@ class FFMPEG
   # @param [Hash] options
   # @option options [String] :ffmpeg_cmd_path  
   def run(file_path, options = { })
-    options = { ffmpeg_cmd_path: @ffmpeg_cmd_path }.merge(options)
+    options = { :ffmpeg_cmd_path => @ffmpeg_cmd_path }.merge(options)
     Movie.new(file_path, options).to_hash
   end # run
 

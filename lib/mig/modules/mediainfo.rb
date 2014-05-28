@@ -23,7 +23,7 @@ class Mediainfo
   def fix_encoding(output)
     output[/test/] # Running a regexp on the string throws error if it's not UTF-8
   rescue ArgumentError
-    output.force_encoding("ISO-8859-1")
+    output.force_encoding('ISO-8859-1')
   end
   
   # Takes the output from media info and creates a hash consisting of hashes of each 'section type' 
