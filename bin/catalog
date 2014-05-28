@@ -1,4 +1,9 @@
 #!/usr/bin/env ruby
+# A utility to create a CSV of the file properties.
+#
+# If process-xml-files is true only the xml files then the file paths inside of supported xml files will be parsed and the files will be
+# analyzed and added to the output
+#
 lib_path = File.expand_path('../../lib', __FILE__)
 $:.unshift(lib_path) if !$:.include?(lib_path) and File.exists?(lib_path)
 
@@ -13,6 +18,8 @@ require 'time'
 require 'uri'
 
 require 'mig/modules/ffmpeg'
+
+DEFAULT_MEDIA_FILE_PATH_FIELD_NAME = 'Media File Path'
 
 options = { }
 options_file_name = nil
@@ -31,9 +38,11 @@ def logger; @logger end
 path_to_catalog = options[:path_to_catalog]
 process_xml_files = options[:process_xml_files]
 destination_path = options[:destination_path]
+media_file_path_field_name = options[:media_file_path_field_name] || DEFAULT_MEDIA_FILE_PATH_FIELD_NAME
 
 path_to_catalog  ||= '/assets/**/*.mov'
 destination_path ||= '/tmp/assets.csv'
+
 
 def unescape_fcp_file_path_url(file_path_url)
   URI(file_path_url).path.gsub(/(%(?:[2-9]|[A-F])(?:\d|[A-F]))/) { |v| CGI.unescape(v) }
@@ -65,8 +74,7 @@ def get_media_file_paths_from_xml(xml_file_path)
   _media_file_paths
 end
 
-
-if process_xml_files
+def get_media_file_paths_from_xml_files(path_to_catalog)
   media_file_paths = [ ]
   media_file_paths_by_xml_file = { }
   xml_file_paths = Dir.glob(path_to_catalog)
@@ -79,13 +87,23 @@ if process_xml_files
     media_file_paths_by_xml_file[xml_file_path] = media_file_paths_from_xml
     media_file_paths = media_file_paths + media_file_paths_from_xml
   end
-  media_file_paths_with_data = process_media_file_paths(media_file_paths)
-else
-  media_file_paths = Dir.glob(path_to_catalog)
-  media_file_paths_with_data = process_media_file_paths(media_file_paths)
+  media_file_paths
 end
 
-media_file_path_field_name = 'Media File Path'
+def data_to_table(media_file_paths_with_data)
+
+end
+
+
+if process_xml_files
+  media_file_paths = get_media_file_paths_from_xml_files(path_to_catalog)
+else
+  media_file_paths = Dir.glob(path_to_catalog)
+end
+
+media_file_paths_with_data = process_media_file_paths(media_file_paths)
+
+
 fields = { media_file_path_field_name => '' }
 media_file_paths_with_data.each { |_, data| fields.merge!(data) }
 empty_record = Hash[fields.map { |k,_| [k, ''] }]
@@ -97,3 +115,4 @@ CSV.open(destination_path, 'w') do |csv|
     csv << empty_record.merge(data).values
   end
 end
+puts "Output written to: #{destination_path}"
