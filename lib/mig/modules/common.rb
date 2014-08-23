@@ -43,7 +43,7 @@ class MediaInformationGatherer
           else
             # What else is there?
         end
-        cv
+        Hash[cv.sort]
       end # common_variables
 
       def common_audio_variables
