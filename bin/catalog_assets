@@ -20,6 +20,60 @@ require 'time'
 require 'uri'
 
 #require 'mig/modules/ffmpeg'
+module Find
+
+  #
+  # Calls the associated block with the name of every file and directory listed
+  # as arguments, then recursively on their subdirectories, and so on.
+  #
+  # See the +Find+ module documentation for an example.
+  #
+  def find(*paths) # :yield: path
+    block_given? or return enum_for(__method__, *paths)
+
+    paths.collect!{|d| raise Errno::ENOENT unless File.exist?(d); d.dup}
+    while file = paths.shift
+      catch(:prune) do
+
+        begin
+          s = File.lstat(file)
+        rescue Errno::ENOENT, Errno::EACCES, Errno::ENOTDIR, Errno::ELOOP, Errno::ENAMETOOLONG
+          next
+        end
+
+        yield file.dup.taint, s
+
+        if s.directory? then
+          begin
+            fs = Dir.entries(file)
+          rescue Errno::ENOENT, Errno::EACCES, Errno::ENOTDIR, Errno::ELOOP, Errno::ENAMETOOLONG
+            next
+          end
+          fs.sort!
+          fs.reverse_each {|f|
+            next if f == "." or f == ".."
+            f = File.join(file, f)
+            paths.unshift f.untaint
+          }
+        end
+      end
+    end
+  end
+
+  #
+  # Skips the current file or directory, restarting the loop with the next
+  # entry. If the current file is a directory, that directory will not be
+  # recursively entered. Meaningful only within the block associated with
+  # Find::find.
+  #
+  # See the +Find+ module documentation for an example.
+  #
+  def prune
+    throw :prune
+  end
+
+  module_function :find, :prune
+end
 
 DEFAULT_MEDIA_FILE_PATH_FIELD_NAME = 'Media File Path'
 
@@ -79,8 +133,14 @@ def data_to_table(media_file_paths_with_data)
 
 end
 
-media_file_paths = recursive ? Find.find(path_to_catalog) : Dir.glob(path_to_catalog)
-
+if recursive then
+  media_file_paths = [ ]
+  Find.find(path_to_catalog) { |fp, stat| media_file_paths << fp if stat.file? }
+else
+ media_file_paths =  Dir.glob(path_to_catalog)
+end
+# require 'pp'
+# abort("MFP Size: #{media_file_paths.length} #{PP.pp(media_file_paths, '')}")
 media_file_paths_with_data = process_media_file_paths(media_file_paths)
 
 
