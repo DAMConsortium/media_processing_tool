@@ -8,9 +8,9 @@ class MediaInformationGatherer
     class << self
 
       def metadata_sources; @metadata_sources || { } end
-      def ffmpeg; metadata_sources[:ffmpeg] || { } end
-      def mediainfo; metadata_sources[:mediainfo] || { 'section_type_count' => { 'audio' => 0 } } end
-
+      def ffmpeg; @ffmpeg ||= metadata_sources[:ffmpeg] || { } end
+      def mediainfo; @mediainfo ||= metadata_sources[:mediainfo] || { 'section_type_count' => { 'audio' => 0 } } end
+      def stat; @stat ||= metadata_sources[:stat] || { } end
       def cv; @cv ||= { } end
 
       def common_variables(_metadata_sources)
@@ -24,9 +24,15 @@ class MediaInformationGatherer
         cv[:file_path] = file_path
         cv[:source_directory] = source_directory
         cv[:creation_date_time] = creation_date_time
+        cv[:ctime] = stat[:ctime]
+        cv[:mtime] = stat[:mtime]
+        cv[:size] = stat[:size]
+        cv[:uid] = stat[:uid]
+        cv[:gid] = stat[:gid]
+        cv[:ftype] = stat[:ftype]
 
         type = :video # Need to figure out where to determine the type from
-        case type.downcase.to_sym
+        case type #.to_s.downcase.to_sym
           when :video
             common_audio_variables
             common_video_variables

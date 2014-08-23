@@ -7,9 +7,17 @@ require 'mig/modules/common'
 
 class MediaInformationGatherer
 
+  File::Stat.class_eval do
+
+    def to_hash
+      (self.methods - Object.methods - [__callee__]).each_with_object({}) { |meth, acc| acc[meth] = self.send(meth) if self.method(meth).arity == 0 }
+    end
+
+  end
+
   attr_reader :log, :options
 
-  # @param [Hash] options
+  # @param [Hash] _options
   # @option options [String] :exiftool_cmd_path
   # @option options [String] :ffmpeg_cmd_path
   # @option options [String] :mediainfo_cmd_path
@@ -54,6 +62,10 @@ class MediaInformationGatherer
   # @param [String] file_path The path of the file to gather information about
   # @return [Hash]
   def run_modules(file_path)
+    log.debug { 'Running File Stat.' }
+    start = Time.now and metadata_sources[:stat] = File.stat(file_path).to_hash rescue { :error => { :message => $!.message, :backtrace => $!.backtrace } }
+    log.debug { "File Stat took #{Time.now - start}" }
+
     log.debug { 'Running Filemagic.' }
     start = Time.now and metadata_sources[:filemagic] = @media_typer.run(file_path, options) rescue { :error => { :message => $!.message, :backtrace => $!.backtrace } }
     log.debug { "Filemagic took #{Time.now - start}" }
