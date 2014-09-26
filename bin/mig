@@ -2,8 +2,11 @@
 #lib_path = File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib'))
 lib_path = File.expand_path('../../lib', __FILE__)
 $:.unshift(lib_path) if !$:.include?(lib_path) and File.exists?(lib_path)
+
+require 'rubygems'
 require 'json'
 require 'optparse'
+
 require 'mig'
 
 options = { }

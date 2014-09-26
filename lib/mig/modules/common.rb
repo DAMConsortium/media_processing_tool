@@ -29,7 +29,8 @@ class MediaInformationGatherer
       cv[:creation_date_time] = creation_date_time
       cv[:ctime] = stat[:ctime]
       cv[:mtime] = stat[:mtime]
-      cv[:size] = stat[:size]
+      cv[:bytes] = stat[:size]
+      cv[:size] = mediainfo['General']['File size']
       cv[:uid] = stat[:uid]
       cv[:gid] = stat[:gid]
       cv[:ftype] = stat[:ftype]

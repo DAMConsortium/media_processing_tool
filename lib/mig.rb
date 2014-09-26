@@ -9,8 +9,25 @@ class MediaInformationGatherer
 
   File::Stat.class_eval do
 
+    TO_HASH_METHODS = [
+      :atime, :blksize, :blockdev?, :blocks, :chardev?, :ctime, :dev, :dev_major, :dev_minor, :directory?,
+      :executable?, :executable_real?, :file?, :ftype, :gid, :grpowned?, :ino, :mode, :mtime, :nlink, :owned?,
+      :pipe?, :rdev, :rdev_major, :rdev_minor, :readable?, :readable_real?,
+      :setgid?, :setuid?, :size, :size?, :socket?, :sticky?, :symlink?, :uid,
+      :world_readable?, :world_writable?, :writable?, :writable_real?, :zero?
+    ]
+
     def to_hash
-      (self.methods - Object.methods - [__callee__]).each_with_object({}) { |meth, acc| acc[meth] = self.send(meth) if self.method(meth).arity == 0 }
+      if defined?(__callee__)
+        return (self.methods - Object.methods - [__callee__]).each_with_object({}) { |meth, acc| acc[meth] = self.send(meth) if self.method(meth).arity == 0 }
+      else
+        #(self.methods - Object.methods).each({}) { |meth, acc| acc[meth] = self.send(meth) if self.method(meth).arity == 0 }
+        hash_out = { }
+        TO_HASH_METHODS.each do |meth|
+          hash_out[meth] = self.send(meth) if self.methods.include?(meth.to_s) and self.method(meth).arity == 0
+        end
+        return hash_out
+      end
     end
 
   end
