@@ -111,6 +111,7 @@ def media_file_path_field_name; @media_file_path_field_name end
 # @destination_path ||= '/tmp/assets.csv'
 
 abort("Path is a required argument.\n#{op}") unless path_to_catalog
+abort("Destination Path is a required argument.\n#{op}") unless destination_path
 
 def unescape_fcp_file_path_url(file_path_url)
   URI(file_path_url).path.gsub(/(%(?:[2-9]|[A-F])(?:\d|[A-F]))/) { |v| CGI.unescape(v) }
@@ -130,16 +131,27 @@ def process_media_file_paths(media_file_paths, options = { })
   media_file_path_data = { }
   media_file_path_count = media_file_paths.length
   media_file_path_counter = 0
+  attempt_counter = 0
   media_file_paths.each do |mfp|
+    attempt_counter += 1
     media_file_path_counter += 1
     logger.debug { "Processing Media File Path #{media_file_path_counter} of #{media_file_path_count}. '#{mfp}'" }
     #next unless File.exists?(mfp)
     #md = @ffmpeg.run(mfp)
     md = process_media_file_path(mfp)
-    abort("File Path Mismatch A1. '#{mfp}' != '#{md[:file_path]}'") unless (mfp == md[:file_path])
+    unless (mfp == md[:file_path])
+      warn("File Path Mismatch A1. '#{mfp}' != '#{md[:file_path]}'")
+      media_file_path_counter -= 1
+      attempt_counter < 4 ? redo : warn("Failing After #{attempt_counter}")
+    end
     md[xml_file_path_field_name] = xml_file_path if xml_file_path
     media_file_path_data[mfp] = md
-    abort("File Path Mismatch A2. '#{mfp}' != '#{md[:file_path]}'") unless (mfp == md[:file_path])
+    # unless (mfp == md[:file_path])
+    #   warn("File Path Mismatch A2. '#{mfp}' != '#{md[:file_path]}'")
+    #   media_file_path_counter -= 1
+    #   redo
+    # end
+    attempt_counter = 0
   end
 
   media_file_path_data
