@@ -30,7 +30,7 @@ class MediaInformationGatherer
       cv[:ctime] = stat[:ctime]
       cv[:mtime] = stat[:mtime]
       cv[:bytes] = stat[:size]
-      cv[:size] = mediainfo['General']['File size']
+      cv[:size] = (mediainfo['General'] || { })['File size']
       cv[:uid] = stat[:uid]
       cv[:gid] = stat[:gid]
       cv[:ftype] = stat[:ftype]
