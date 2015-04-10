@@ -6,7 +6,7 @@
 #
 lib_path = File.expand_path('../../lib', __FILE__)
 $:.unshift(lib_path) if !$:.include?(lib_path) and File.exists?(lib_path)
-
+require 'rubygems'
 require 'cgi'
 require 'csv'
 require 'find'
@@ -14,6 +14,7 @@ require 'json'
 require 'logger'
 require 'mig'
 require 'open3'
+require 'open3_backport' if RUBY_VERSION.start_with?('1.8.')
 require 'optparse'
 require 'pp'
 require 'shellwords'
