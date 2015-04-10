@@ -47,7 +47,11 @@ class MediaInformationGatherer
         else
           # What else is there?
       end
-      Hash[cv.sort]
+      if RUBY_VERSION.start_with?('1.8.')
+        Hash[cv.map { |a| [ a[0].to_s, a[1] ] }.sort.map { |a| [ a[0].to_sym, a[1] ] }]
+      else
+        Hash[cv.sort]
+      end
     end # common_variables
 
     def common_audio_variables
