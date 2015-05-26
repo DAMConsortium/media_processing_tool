@@ -1,5 +1,5 @@
 require 'filemagic/ext'
-
+class MediaInformationGatherer
 class MediaType
   
   # @params [Hash] options Not currently used
@@ -20,3 +20,4 @@ class MediaType
   end # run
 
 end # MediaType
+end

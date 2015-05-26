@@ -1,6 +1,11 @@
+class MediaInformationGatherer
 class Mediainfo
 
-  DEFAULT_EXECUTABLE_PATH = '/usr/local/bin/mediainfo'
+    DEFAULT_EXECUTABLE_PATH = 'mediainfo'
+
+  def self.run(file_path, options = { })
+    new(options).run(file_path, options)
+  end
 
   # @params [Hash] options
   # @options options [String] :mediainfo_cmd_path
@@ -82,3 +87,5 @@ class Mediainfo
   end # append_section
   
 end # MediaInfo
+
+end

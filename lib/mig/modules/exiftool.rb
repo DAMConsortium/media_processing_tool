@@ -1,5 +1,7 @@
 require 'json'
 require 'shellwords'
+class MediaInformationGatherer
+
 class ExifTool
 
   DEFAULT_EXECUTABLE_PATH = 'exiftool'
@@ -20,3 +22,5 @@ class ExifTool
   end # self.run
   
 end #ExifTool
+
+end
