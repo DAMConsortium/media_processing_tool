@@ -55,13 +55,19 @@ class MediaInformationGatherer
 
     @media_typer = MediaType.new
 
+    @default_run_file_stat = options.fetch(:run_file_stat, true)
+    @default_run_file_magic = options.fetch(:run_filemagic, true)
+    @default_run_mediainfo = options.fetch(:run_mediainfo, true)
+    @default_run_ffmpeg = options.fetch(:run_ffmpeg, true)
+    @default_run_exiftool = options.fetch(:run_exiftool, true)
+    @default_run_common = options.fetch(:run_common, true)
   end # initialize
 
   def media_type; @media_type ||= { } end
   def metadata_sources; @metadata_sources ||= { } end
 
   # @param [String] file_path The path to the file to gather information about
-  def run(file_path)
+  def run(file_path, options = { })
     @media_type = { }
     @metadata_sources = { }
 
@@ -70,7 +76,7 @@ class MediaInformationGatherer
 
     gathering_start = Time.now
     log.debug { "Gathering metadata for file: #{file_path}"}
-    @metadata_sources = run_modules(file_path)
+    @metadata_sources = run_modules(file_path, options)
     log.debug { "Metadata gathering completed. Took: #{Time.now - gathering_start} seconds" }
 
     metadata_sources
@@ -78,31 +84,48 @@ class MediaInformationGatherer
 
   # @param [String] file_path The path of the file to gather information about
   # @return [Hash]
-  def run_modules(file_path)
-    log.debug { 'Running File Stat.' }
-    start = Time.now and metadata_sources[:stat] = File.stat(file_path).to_hash rescue { :error => { :message => $!.message, :backtrace => $!.backtrace } }
-    log.debug { "File Stat took #{Time.now - start}" }
+  def run_modules(file_path, options = { })
+    run_file_stat = options.fetch(:run_file_stat, @default_run_file_stat)
+    run_filemagic = options.fetch(:run_filemagic, @default_run_filemagic)
+    run_mediainfo = options.fetch(:run_mediainfo, @default_run_mediainfo)
+    run_ffmpeg = options.fetch(:run_ffmpeg, @default_run_ffmpeg)
+    run_exiftool = options.fetch(:run_exiftool, @default_run_exiftool)
+    run_common = options.fetch(:run_common, @default_run_common)
 
-    log.debug { 'Running Filemagic.' }
-    start = Time.now and metadata_sources[:filemagic] = @media_typer.run(file_path, options) rescue { :error => { :message => $!.message, :backtrace => $!.backtrace } }
-    log.debug { "Filemagic took #{Time.now - start}" }
+    if run_file_stat
+      log.debug { 'Running File Stat.' }
+      start = Time.now and metadata_sources[:stat] = File.stat(file_path).to_hash rescue { :error => { :message => $!.message, :backtrace => $!.backtrace } }
+      log.debug { "File Stat took #{Time.now - start}" }
+    end
 
-    log.debug { 'Running MediaInfo.' }
-    start = Time.now and metadata_sources[:mediainfo] = @mediainfo.run(file_path, options) rescue { :error => { :message => $!.message, :backtrace => $!.backtrace } }
-    log.debug { "MediaInfo took #{Time.now - start}" }
+    if run_filemagic
+      log.debug { 'Running Filemagic.' }
+      start = Time.now and metadata_sources[:filemagic] = @media_typer.run(file_path, options) rescue { :error => { :message => $!.message, :backtrace => $!.backtrace } }
+      log.debug { "Filemagic took #{Time.now - start}" }
+    end
 
-    log.debug { 'Running FFMPEG.' }
-    start = Time.now and metadata_sources[:ffmpeg] = @ffmpeg.run(file_path, options) rescue { :error => { :message => $!.message, :backtrace => $!.backtrace } }
-    log.debug { "FFMpeg took #{Time.now - start}" }
+    if run_mediainfo
+      log.debug { 'Running MediaInfo.' }
+      start = Time.now and metadata_sources[:mediainfo] = @mediainfo.run(file_path, options) rescue { :error => { :message => $!.message, :backtrace => $!.backtrace } }
+      log.debug { "MediaInfo took #{Time.now - start}" }
+    end
 
-    log.debug { 'Running ExifTool.' }
-    start = Time.now and metadata_sources[:exiftool] = @exiftool.run(file_path) rescue { :error => { :message => $!.message, :backtrace => $!.backtrace } }
-    log.debug { "ExifTool took #{Time.now - start}" }
+    if run_ffmpeg
+      log.debug { 'Running FFMPEG.' }
+      start = Time.now and metadata_sources[:ffmpeg] = @ffmpeg.run(file_path, options) rescue { :error => { :message => $!.message, :backtrace => $!.backtrace } }
+      log.debug { "FFMpeg took #{Time.now - start}" }
+    end
+
+    if run_exiftool
+      log.debug { 'Running ExifTool.' }
+      start = Time.now and metadata_sources[:exiftool] = @exiftool.run(file_path) rescue { :error => { :message => $!.message, :backtrace => $!.backtrace } }
+      log.debug { "ExifTool took #{Time.now - start}" }
+    end
 
     set_media_type
     metadata_sources[:media_type] = media_type
 
-    metadata_sources[:common] = Common.common_variables(metadata_sources)
+    metadata_sources[:common] = Common.common_variables(metadata_sources) if run_common
 
     metadata_sources
   end # run_modules
